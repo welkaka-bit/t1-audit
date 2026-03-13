@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> Rochling Automotive — Audit Pro 2026</title>
+<title>T1 Automotive — Audit Pro 2026 v7</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -726,13 +729,13 @@ select.form-input option{background:var(--card);}
 
 /* ===== IMPORT MODAL ===== */
 .import-dropzone{
-  border:2px dashed var(--border);
+  border:2px dashed var(--border-hover);
   border-radius:14px;
-  padding:48px 24px;
+  padding:36px 24px;
   text-align:center;
   cursor:pointer;
   transition:all .2s;
-  background:var(--card);
+  background:var(--surface);
   position:relative;
 }
 .import-dropzone.drag-over{
@@ -748,15 +751,17 @@ select.form-input option{background:var(--card);}
 .import-progress-bar{height:100%;background:var(--grad);border-radius:8px;transition:width .3s;}
 .import-log{
   margin-top:16px;
-  background:var(--card2);
+  background:var(--surface);
+  border:1px solid var(--border);
   border-radius:10px;
-  padding:14px 16px;
+  padding:14px;
   font-size:12px;
-  font-family:monospace;
-  max-height:180px;
+  line-height:1.8;
+  max-height:220px;
   overflow-y:auto;
   display:none;
-  line-height:1.8;
+  font-family:monospace;
+  color:var(--text);
 }
 .import-log .log-ok{color:var(--success);}
 .import-log .log-warn{color:var(--warning);}
@@ -796,7 +801,7 @@ select.form-input option{background:var(--card);}
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="brand">ROCHLING AUTOMOTIVE</div>
+    <div class="brand">T1 AUTOMOTIVE</div>
     <div class="sub">Audit Pro</div>
     <span class="sidebar-year">2026</span>
   </div>
@@ -843,6 +848,8 @@ select.form-input option{background:var(--card);}
           <div class="export-item" onclick="exportToExcel(); closeExportMenu()">📊 Excel (.xlsx)</div>
           <div class="export-item" onclick="exportToCSV(); closeExportMenu()">📄 CSV</div>
           <div class="export-item" onclick="exportToPrint(); closeExportMenu()">🖨️ Imprimir Tudo</div>
+          <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
+          <div class="export-item" onclick="exportBackupJSON()">💾 Backup JSON</div>
         </div>
       </div>
     </div>
@@ -1058,20 +1065,30 @@ select.form-input option{background:var(--card);}
 
       <!-- Dropzone -->
       <div class="import-dropzone" id="importDropzone"
-           onclick="document.getElementById('importFileInput').click()"
-           ondragover="handleDragOver(event)"
-           ondragleave="handleDragLeave(event)"
-           ondrop="handleDrop(event)">
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="event.preventDefault();this.classList.remove('drag-over');handleImportFile(event.dataTransfer.files[0])">
         <input type="file" id="importFileInput" style="display:none"
                accept=".xlsx,.xlsm,.xls,.csv"
                onchange="handleImportFile(this.files[0])">
+        <input type="file" id="importJSONInput" style="display:none"
+               accept=".json"
+               onchange="importBackupJSON(this.files[0])">
         <div class="import-dropzone-icon">📊</div>
         <div class="import-dropzone-title">Arraste o arquivo aqui</div>
-        <div class="import-dropzone-sub">ou clique para selecionar · .xlsx · .xlsm · .xls · .csv</div>
+        <div class="import-dropzone-sub">ou selecione abaixo</div>
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="document.getElementById('importFileInput').click()">
+            📊 Importar Excel (.xlsm/.xlsx)
+          </button>
+          <button class="btn" style="background:var(--card2)" onclick="document.getElementById('importJSONInput').click()">
+            💾 Restaurar Backup (.json)
+          </button>
+        </div>
       </div>
 
       <!-- Progress -->
-      <div class="import-progress" id="importProgress">
+      <div class="import-progress" id="importProgress" style="display:none;">
         <div class="import-progress-bar-wrap">
           <div class="import-progress-bar" id="importProgressBar" style="width:0%"></div>
         </div>
@@ -1079,10 +1096,10 @@ select.form-input option{background:var(--card);}
       </div>
 
       <!-- Log -->
-      <div class="import-log" id="importLog"></div>
+      <div class="import-log" id="importLog" style="display:none;"></div>
 
       <!-- Summary -->
-      <div class="import-summary" id="importSummary">
+      <div class="import-summary" id="importSummary" style="display:none;">
         <div style="font-weight:700;font-size:14px;">✅ Importação concluída!</div>
         <div class="import-summary-grid">
           <div class="import-summary-item"><div class="val" id="impTotal">0</div><div class="lbl">Auditorias</div></div>
@@ -1196,13 +1213,25 @@ select.form-input option{background:var(--card);}
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group full">
-          <label class="form-label">Descrição do Produto</label>
-          <input class="form-input" id="eDesc">
+        <div class="form-group">
+          <label class="form-label">Código SAP</label>
+          <input class="form-input" id="eSap" placeholder="111020103">
+        </div>
+        <div class="form-group">
+          <label class="form-label">PN Cliente</label>
+          <input class="form-input" id="ePn" placeholder="04E.129.712.B">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <input class="form-input" id="eClient" placeholder="VW, GM, BMW...">
         </div>
         <div class="form-group">
           <label class="form-label">Família</label>
           <input class="form-input" id="eFamily">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Descrição do Produto</label>
+          <input class="form-input" id="eDesc">
         </div>
         <div class="form-group">
           <label class="form-label">Responsável</label>
@@ -1547,62 +1576,22 @@ let eFileData = null;
 // ======= DADOS INICIAIS =======
 const DEFAULT_AUDITS = [{"id":1,"sap":"111020103","pn":"04E   129712B","client":"VW","desc":"COLETOR DE ADMISSÃO 1.6L EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":2,"sap":"111020203","pn":"04C   133201K","client":"VW","desc":"COLETOR DE ADMISSÃO 1.0L EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,2,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 14/08/2023","file":null},{"id":3,"sap":"111736102","pn":"04C   129607B","client":"VW","desc":"FILTRO DE AR - FOX - 04C 129 607 B EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 19/12/2022","file":null},{"id":4,"sap":"112106502","pn":"04C   129709A","client":"VW","desc":"COLETOR DE ADMISSÃO 1.0L TSI EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":5,"sap":"112106800","pn":"04C   145673C","client":"VW","desc":"TUBO DE PRESSÃO 1.0 TSI EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":6,"sap":"112177302","pn":"24587185","client":"GM","desc":"COLETOR DE ADMISSÃO GV4 1.0L GASOLINA","family":"Motor/Radiador/AGS","risk":"Alto","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 09/05/2022","file":null},{"id":7,"sap":"112368001","pn":"04C   129611K","client":"VW","desc":"FILTRO DE AR - 04C 129 611K EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":8,"sap":"112644402","pn":"5GB   121407C","client":"AUDI _VW","desc":"DEGAS BOTTLE W/O SILICABAG MQB","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":9,"sap":"112831200","pn":"6858413-00","client":"BMW","desc":"REAR COVER AERODYNAMIC LEFT F48","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 17/05/2022","file":null},{"id":10,"sap":"112831400","pn":"6858414-00","client":"BMW","desc":"REAR COVER AERODYNAMIC RIGHT F48","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 17/05/2022","file":null},{"id":11,"sap":"112896802","pn":"24586808","client":"GM","desc":"INTAKE MANIFOLD GV4 1,4L/1.8L GASOHOL","family":"Motor/Radiador/AGS","risk":"Alto","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 25/04/2022","file":null},{"id":12,"sap":"113918001","pn":"2QB   129509","client":"VW","desc":"COLETOR DE AR 2QB 129509 MQB/MPI","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":13,"sap":"113918302","pn":"26322707","client":"GM","desc":"DUTO ENTRADA DE AR 26322707 GMB GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":14,"sap":"113918401","pn":"26209793","client":"GM","desc":"DUCT ASM-AIR INL 26209793 GMB GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":15,"sap":"113928605","pn":"13537035","client":"GM","desc":"RESERVATORIO EXPANSÃO 13537035 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":16,"sap":"113928802","pn":"26292495","client":"GM","desc":"CARCAÇA DE COMBUSTIVEL 26292495 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":17,"sap":"114106902","pn":"52051046","client":"GM","desc":"GM DEFLETOR DE ÁGUA SIST FLEX PM7 SCS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 17/11/2021","file":null},{"id":18,"sap":"114107102","pn":"52051047","client":"GM","desc":"DEFLETOR DE ÁGUA PM7 SCS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":19,"sap":"114107702","pn":"52088224","client":"GM","desc":"DEFLETOR INF.RAD.PM7 52088224 GM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":20,"sap":"114107902","pn":"52104021","client":"GM","desc":"DEFLETOR SUP.RAD.GSV 52104021 GM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última produção dia 12/01/2023","file":null},{"id":21,"sap":"114108102","pn":"52104020","client":"GM","desc":"DEFLETOR INF.RAD.GSV 52104020 GM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última produção dia 05/01/2023","file":null},{"id":22,"sap":"114108302","pn":"52087524","client":"GM","desc":"DEFLETOR SUP.RAD.SPIN 52087524 GM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última produção dia 20/09/2022","file":null},{"id":23,"sap":"114108506","pn":"26402607","client":"GM","desc":"PAINEL SEPARADOR AGUA -GRL 26602607 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":24,"sap":"114246303","pn":"26224654","client":"GM","desc":"TAMPA LATERAL DO CAPÔ 26224654 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":25,"sap":"114246403","pn":"26224655","client":"GM","desc":"TAMPA LATERAL DO CAPÔ 26224655 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":26,"sap":"114458801","pn":"94744776","client":"GM","desc":"DEFLETOR SUP. RAD. 4NB P&A 94744776 GM","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 29/08/2022","file":null},{"id":27,"sap":"114469801","pn":"04E   129611AB","client":"VW","desc":"FILTRO DE AR R4 TSI EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":28,"sap":"114660801","pn":"24588756","client":"GM","desc":"BEAUTY ENGINE COVER 24588756 SGE","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":29,"sap":"114661001","pn":"26218100","client":"GM","desc":"DEFLETOR TURBO 1.2 ASPIRADO SUP 26218100","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":30,"sap":"114661101","pn":"26218101","client":"GM","desc":"DEFLETOR TURBO INFERIOR 26218101","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":31,"sap":"114661601","pn":"26248152","client":"GM","desc":"REFORÇO INFERIOR DO PARACHOQUE 26248152","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":32,"sap":"114685601","pn":"2GB   121407G","client":"VW","desc":"RESERVATÓRIO DE EXPANS. MQB27","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":33,"sap":"114685801","pn":"1SB 121 407 C","client":"VW","desc":"RESERVATÓRIO DE EXPANSÃO TSI","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,2,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 15/01/2022","file":null},{"id":34,"sap":"114690501","pn":"26227778","client":"GM","desc":"TAMPA LATERAL CAPÔ LH BSUV 26227778 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":35,"sap":"114690601","pn":"26227779","client":"GM","desc":"TAMPA LATERAL CAPÔ RH BSUV 26227779 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":36,"sap":"114691102","pn":"84751133","client":"GM","desc":"PAINEL SEPARADOR AGUA 84751133 GMI700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":37,"sap":"114691302","pn":"84886702","client":"GM","desc":"EXTENSIONS RH 84886702 GMI700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":38,"sap":"114691402","pn":"84886703","client":"GM","desc":"EXTENSIONS LH 84886703 GMI700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":39,"sap":"114691501","pn":"26235211","client":"GM","desc":"ESCUDO PROTETOR DE AGUA 26235211 B-CAR","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":40,"sap":"114883601","pn":"26218102","client":"GM","desc":"DEFLETO DE AR SUP - 102 JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":41,"sap":"114883701","pn":"26218103","client":"GM","desc":"DEFLETOR DE AR INF, XXX103 JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":42,"sap":"114885501","pn":"26271784","client":"GM","desc":"DEFLETOR DE AR SUP 26271784 JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":43,"sap":"114885601","pn":"26271785","client":"GM","desc":"DEFLETOR DE AR INF 26271785 JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":44,"sap":"114891001","pn":"26292497","client":"GM","desc":"CARCAÇA DE COMBUSTIVEL 26292497 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":45,"sap":"114891101","pn":"26292496","client":"GM","desc":"DOOR 4NB ASM-F/TNK FIL 26292496 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":46,"sap":"114891203","pn":"26369112","client":"GM","desc":"CARCAÇA DE COMBUSTIVEL BSUV GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":47,"sap":"114891301","pn":"26228004","client":"GM","desc":"DOOR BSUV ASM-F/TNK FIL 26228004 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":48,"sap":"114108702","pn":"26279904 \n(New: 52177547)","client":"GM","desc":"SUPORTE DO PARACHOQUE LH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":49,"sap":"114896001","pn":"26279905","client":"GM","desc":"SUPORTE DE PARACHOQUE SM RH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":50,"sap":"114896301","pn":"26279908","client":"GM","desc":"SUPORTE DE PARACHOQUE LH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":51,"sap":"114896401","pn":"26279909","client":"GM","desc":"SUPORTE DE PARACHOQUE RH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":52,"sap":"114896501","pn":"26227735","client":"GM","desc":"SUPORTE DE PARACHOQUE LH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":53,"sap":"114896601","pn":"26227736","client":"GM","desc":"SUPORTE DE PARACHOQUE RH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":54,"sap":"114903701","pn":"26223218","client":"GM","desc":"TAMPA COMBUSTIVEL - 5HB - 26223218 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":55,"sap":"114933601","pn":"26273633","client":"GM","desc":"DEFLETOR DE AR SUP XXX33 26273633","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Peça não produziu no mês de Março. Produção realizada mês de Abril.","file":null},{"id":56,"sap":"114933701","pn":"26273634","client":"GM","desc":"DEFLETOR DE AR SUP XXX34 26273634","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":57,"sap":"115085805","pn":"26402609","client":"GM","desc":"PAINEL SEPARADOR AGUA C/ DEFLETOR GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":58,"sap":"115163402","pn":"24589673","client":"GM","desc":"TUBO ENTRADA AGUA 24589673 GMI-700","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":59,"sap":"115325301","pn":"26251948","client":"GM","desc":"ESCUDO PROTETOR DE AGUA 26251948 B-SUV","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":60,"sap":"115407901","pn":"55282361","client":"Stellantis","desc":"Pescador de Oleo T4","family":"Motor/Radiador/AGS","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":61,"sap":"115482701","pn":"26252332","client":"GM","desc":"DEFLETOR DE AR INF ASM-RAD 1.2 NA JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":62,"sap":"115511501","pn":"84394077","client":"GM","desc":"DEFLETOR DE AR - RAD LD 84344077 GMI-700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 26/11/2021","file":null},{"id":63,"sap":"115511601","pn":"84394078","client":"GM","desc":"DEFLETOR DE AR - RAD LE 84394078 GMI-700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 26/11/2021","file":null},{"id":64,"sap":"115511701","pn":"84394079","client":"GM","desc":"DEFLETOR DE AR - RAD LD 84394079 GMI-700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":65,"sap":"115511801","pn":"84394080","client":"GM","desc":"DEFLETOR DE AR - RAD LE 84394080 GMI-700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":66,"sap":"115519302","pn":"04C.129.709.N","client":"VW","desc":"COLETOR TSI 1.0L 04C 129 709 N PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":67,"sap":"115399502","pn":"04E.145.673.AP","client":"VW","desc":"Boost Air Pipe Flex 04E145673AP 1.4TSI","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":68,"sap":"115399602","pn":"04E.129.709.AS","client":"VW","desc":"Air Intake Manifold Flex/Sulev 1.4 TSI","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":69,"sap":"115519002","pn":"04E.129.712.BC","client":"VW","desc":"AIM MPI 1.0L 04C 133 201 AB PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":70,"sap":"115519202","pn":"04C.145.673.J","client":"VW","desc":"BAP TSI 1.0L 04C 145 673 J PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":71,"sap":"115519102","pn":"04C.133.201.AB","client":"VW","desc":"AIM MSI 1.6L 04E 129 712 BC PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":72,"sap":"113410202","pn":"214F66380R","client":"RENAULT","desc":"AGS 214F66380R Duster HJD LEV7","family":"Motor/Radiador/AGS","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":73,"sap":"115918801","pn":"OM654  A9075285900","client":"Mercedes-Benz","desc":"FILTRO AR RWD (Euro 5/Euro 6)","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":74,"sap":"113928605","pn":"13545832","client":"GM","desc":"RESERVATORIO EXPANSÃO GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":75,"sap":"116066601","pn":"628112463R","client":"RENAULT","desc":"GUIA DE AR SUPERIOR RAD U79 Ph2","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 31/05/2023","file":null},{"id":76,"sap":"116066701","pn":"628118910R","client":"RENAULT","desc":"GUIA DE AR SUPERIOR RAS U79 Ph2","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 31/05/2023","file":null},{"id":77,"sap":"115717001","pn":"215593208R","client":"RENAULT","desc":"GUIDE AIR 215593208R HJD","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":78,"sap":"115408101","pn":"215593009R","client":"RENAULT","desc":"Guide Air FR UPR 215593009R HHA","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 14/12/2022","file":null},{"id":79,"sap":"115717101","pn":"215597989R","client":"RENAULT","desc":"GUIDE AIR G 215597989R HJD","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":80,"sap":"115408401","pn":"215598832R","client":"RENAULT","desc":"Guide Air Inf 215598832R HHA","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 12/12/2022","file":null},{"id":81,"sap":"115408001","pn":"215594592R","client":"RENAULT","desc":"Guide Air Main 215594592R HHA","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última produção dia 22/07/2022","file":null},{"id":82,"sap":"115583401","pn":"628114829R","client":"RENAULT","desc":"Guide Air RAS UPR 628114829R HHA","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 14/12/2022","file":null},{"id":83,"sap":"115408301","pn":"215589688R","client":"RENAULT","desc":"Guide Air RH RAS 215589688R 2 HHA","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":84,"sap":"115716901","pn":"215595364R","client":"RENAULT","desc":"LOWER RADIATOR AIR GUIDE 215595364R HJD","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":85,"sap":"113818701","pn":"55282251","client":"Stellantis","desc":"TUBO PESCADOR DE OLEO T3 55282251","family":"Motor/Radiador/AGS","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 14/12/2022","file":null},{"id":86,"sap":"115717201","pn":"215590466R","client":"RENAULT","desc":"UPPER RADIATOR AIR GUIDE 215590466R HJD","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":87,"sap":"115855801","pn":"04E145673AQ","client":"VW","desc":"Boost Air Pipe Sulev 04E145673AQ 1.4TSI PL6","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":88,"sap":"116184803","pn":"74200T14A M003","client":"HONDA","desc":"COWL TOP ASSY FR T00A","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":89,"sap":"115888301","pn":"26275596","client":"GM","desc":"GUIDE ASM-FRT BPR FASCIA RH TWIN","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":90,"sap":"115888401","pn":"26275597","client":"GM","desc":"GUIDE ASM-RR BPR FASCIA BS LH TWIN","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":91,"sap":"115888501","pn":"26275598","client":"GM","desc":"GUIDE ASM-RR BPR FASCIA BS LH TWIN","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":92,"sap":"115888601","pn":"26322632","client":"GM","desc":"GUIDE ASM-RR BPR FASCIA T/LP LH TWIN","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":93,"sap":"115918701","pn":"OM654  A9075283300","client":"Daimler","desc":"Filtro de Ar (Euro 3) OM654","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,2,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":94,"sap":"116474101","pn":"742003M6AM006","client":"HONDA","desc":"COWL TOP ASSY FR 3M0A","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":95,"sap":"114678202","pn":"12705416","client":"GM","desc":"Air Intake Manifold CSS Prime PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":96,"sap":"116518601","pn":"12707080","client":"GM","desc":"Air Intake Manifold CSS Prime PL6","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":97,"sap":"115894102","pn":"26426641","client":"GM","desc":"ALOJAMENTO DO TUBO DE ENCHIMENTO DO TANQ","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":98,"sap":"114677203","pn":"26426643","client":"GM","desc":"PORTINHOLA DE ENCHIMENTO DO TANQUE DE CO","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":99,"sap":"117421502","pn":"26438172","client":"GM","desc":"PAINEL DA GRADE DE ENTRADA DE AR JCCC","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":100,"sap":"117421703","pn":"52176323","client":"GM","desc":"EXTENSAO DO PAINEL DA GRADE ENTRADA RH","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":101,"sap":"117421603","pn":"52176324","client":"GM","desc":"EXTENSAO DO PAINEL DA GRADE ENTRADA LH","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":102,"sap":"117930501","pn":"52174535","client":"GM","desc":"DEFLETOR SUPERIOR JCCC RS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":103,"sap":"117803100","pn":"26405888","client":"GM","desc":"DEFLETOR DE AR SUPERIOR JBUC RS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":104,"sap":"117803200","pn":"26405889","client":"GM","desc":"DEFLETOR DE AR INFERIOR JBUC RS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null}];
 
-// ======= GOOGLE APPS SCRIPT — CLOUD SYNC =======
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwjGYGrjL0GCGN_yAThefogNIGpIm7xSx4SdraBe7zK8r-BbnstqJB-C0Ip7Sn95lWd/exec';
-let cloudSaveTimer = null;
-let isSaving = false;
-
-async function cloudLoad() {
-  try {
-    const res = await fetch(GAS_URL, {
-      method: 'GET',
-      redirect: 'follow'
-    });
-    const text = await res.text();
-    if (!text || text.trim() === '' || text.trim() === '[]') return null;
-    const parsed = JSON.parse(text);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    if (parsed && Array.isArray(parsed.audits) && parsed.audits.length > 0) return parsed.audits;
-    return null;
-  } catch(e) {
-    console.warn('Cloud load failed:', e);
-    return null;
-  }
-}
-
-async function cloudSave() {
-  if (isSaving) return;
-  isSaving = true;
-  setCloudStatus('saving');
-  try {
-    // no-cors necessário ao salvar de origem externa
-    await fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(audits)
-    });
-    setCloudStatus('ok');
-    try { localStorage.setItem('audits_t1_2026', JSON.stringify(audits)); } catch(e) {}
-  } catch(e) {
-    console.warn('Cloud save failed:', e);
-    setCloudStatus('offline');
-    notify('📴 Falha ao salvar na nuvem', 'warn');
-  }
-  isSaving = false;
-}
+// ======= ARMAZENAMENTO LOCAL + BACKUP JSON =======
 
 function saveAudits() {
   try { localStorage.setItem('audits_t1_2026', JSON.stringify(audits)); } catch(e) {}
-  clearTimeout(cloudSaveTimer);
-  cloudSaveTimer = setTimeout(cloudSave, 1500);
+  setCloudStatus('saved');
 }
 
 function loadLocalAudits() {
   try {
     const saved = localStorage.getItem('audits_t1_2026');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
   } catch(e) {}
+  // localStorage bloqueado ou vazio — usa dados padrão do código
   return JSON.parse(JSON.stringify(DEFAULT_AUDITS));
 }
 
@@ -1610,25 +1599,64 @@ function setCloudStatus(state) {
   const el = document.getElementById('cloudStatus');
   if (!el) return;
   const states = {
-    loading: '🔄 Conectando...',
-    ok:      '<span style="color:var(--success)">☁️ Sincronizado</span>',
-    saving:  '🔄 Salvando...',
+    saved:   '<span style="color:var(--success)">💾 Salvo</span>',
+    loading: '🔄 Carregando...',
     offline: '<span style="color:var(--warning)">📴 Offline</span>',
-    error:   '<span style="color:var(--danger)">⚠️ Erro</span>'
   };
   el.innerHTML = states[state] || state;
 }
 
-let audits = loadLocalAudits();
+// Exporta backup JSON
+function exportBackupJSON() {
+  const data = JSON.stringify(audits, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href     = url;
+  a.download = `T1-Audit-Backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  notify('✅ Backup exportado com sucesso!');
+  closeExportMenu();
+}
+
+// Importa backup JSON
+function importBackupJSON(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const list = Array.isArray(data) ? data : data.audits;
+      if (!list || !list.length) { notify('Arquivo JSON inválido','error'); return; }
+      audits   = list;
+      filtered = [...audits];
+      saveAudits();
+      updateFilterOptions();
+      renderMetrics();
+      renderCharts();
+      renderGantt();
+      notify(`✅ ${list.length} auditorias restauradas do backup!`);
+      closeImportModal();
+    } catch(e) {
+      notify('Erro ao ler JSON: ' + e.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+let audits   = loadLocalAudits();
 let filtered = [...audits];
 
 // ======= INIT =======
-async function init() {
+function init() {
   document.getElementById('loading').classList.add('active');
-  document.getElementById('loadingMsg').textContent = 'Conectando à nuvem...';
+  document.getElementById('loadingMsg').textContent = 'Carregando dados...';
   setCloudStatus('loading');
 
-  const th = localStorage.getItem('theme_t1');
+  let th = '';
+  try { th = localStorage.getItem('theme_t1') || ''; } catch(e) {}
   if (th === 'light') {
     document.body.classList.add('light');
     document.getElementById('themeIcon').textContent = '☀️';
@@ -1637,27 +1665,7 @@ async function init() {
   buildMonthsGrid('n');
   buildMonthsGrid('e');
 
-  try {
-    document.getElementById('loadingMsg').textContent = 'Buscando dados na nuvem...';
-    const cloudData = await cloudLoad();
-    if (cloudData) {
-      audits = cloudData;
-      filtered = [...audits];
-      try { localStorage.setItem('audits_t1_2026', JSON.stringify(audits)); } catch(e) {}
-      setCloudStatus('ok');
-      notify('☁️ Dados carregados da nuvem!');
-    } else {
-      // Nuvem vazia ou primeira vez — sobe os dados locais
-      setCloudStatus('saving');
-      await cloudSave();
-      setCloudStatus('ok');
-    }
-  } catch(e) {
-    setCloudStatus('offline');
-    notify('📴 Modo offline — dados locais', 'warn');
-  }
-
-  document.getElementById('loadingMsg').textContent = 'Carregando interface...';
+  setCloudStatus('saved');
   updateFilterOptions();
   renderMetrics();
   renderCharts();
@@ -2075,12 +2083,15 @@ function openEditModal(id){
   currentEditId=id;
   eFileData = a.file ? {...a.file} : null;
   document.getElementById('editModalTitle').textContent = 'Editar — '+a.sap;
-  document.getElementById('eDesc').value = a.desc||'';
+  document.getElementById('eSap').value    = a.sap||'';
+  document.getElementById('ePn').value     = a.pn||'';
+  document.getElementById('eClient').value = a.client||'';
+  document.getElementById('eDesc').value   = a.desc||'';
   document.getElementById('eFamily').value = a.family||'';
-  document.getElementById('eResp').value = a.resp||'';
-  document.getElementById('eRisk').value = a.risk||'Médio';
+  document.getElementById('eResp').value   = a.resp||'';
+  document.getElementById('eRisk').value   = a.risk||'Médio';
   document.getElementById('eStatus').value = a.status||'Aprovado';
-  document.getElementById('eObs').value = a.obs||'';
+  document.getElementById('eObs').value    = a.obs||'';
   setMonths('e', a.months||Array(12).fill(0));
   if(a.file){
     document.getElementById('eFileName').textContent = a.file.name;
@@ -2094,12 +2105,15 @@ function openEditModal(id){
 function saveEdit(){
   const a = audits.find(x=>x.id===currentEditId);
   if(!a) return;
-  a.desc = document.getElementById('eDesc').value.trim();
+  a.sap    = document.getElementById('eSap').value.trim() || a.sap;
+  a.pn     = document.getElementById('ePn').value.trim();
+  a.client = document.getElementById('eClient').value.trim();
+  a.desc   = document.getElementById('eDesc').value.trim();
   a.family = document.getElementById('eFamily').value.trim();
-  a.resp = document.getElementById('eResp').value.trim();
-  a.risk = document.getElementById('eRisk').value;
+  a.resp   = document.getElementById('eResp').value.trim();
+  a.risk   = document.getElementById('eRisk').value;
   a.status = document.getElementById('eStatus').value;
-  a.obs = document.getElementById('eObs').value.trim();
+  a.obs    = document.getElementById('eObs').value.trim();
   a.months = getMonths('e');
   if(eFileData) a.file = eFileData;
   saveAudits();
@@ -2248,33 +2262,20 @@ function exportToPrint(){
 let importedAudits = [];
 
 function openImportModal(){
-  // Reset state
   importedAudits = [];
+  document.getElementById('importDropzone').style.display = '';
   document.getElementById('importProgress').style.display = 'none';
   document.getElementById('importLog').style.display = 'none';
+  document.getElementById('importLog').innerHTML = '';
   document.getElementById('importSummary').style.display = 'none';
   document.getElementById('importProgressBar').style.width = '0%';
-  document.getElementById('importDropzone').style.display = '';
+  document.getElementById('importProgressMsg').textContent = 'Lendo arquivo...';
   document.getElementById('importFileInput').value = '';
   document.getElementById('importModal').classList.add('active');
 }
 
 function closeImportModal(){
   document.getElementById('importModal').classList.remove('active');
-}
-
-function handleDragOver(e){
-  e.preventDefault();
-  document.getElementById('importDropzone').classList.add('drag-over');
-}
-function handleDragLeave(e){
-  document.getElementById('importDropzone').classList.remove('drag-over');
-}
-function handleDrop(e){
-  e.preventDefault();
-  document.getElementById('importDropzone').classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if(file) handleImportFile(file);
 }
 
 function setImportProgress(pct, msg){
@@ -2291,30 +2292,62 @@ function addImportLog(msg, type=''){
 }
 
 function handleImportFile(file){
-  if(!file) return;
-  const ext = file.name.split('.').pop().toLowerCase();
-  if(!['xlsx','xlsm','xls','csv'].includes(ext)){
-    notify('Formato não suportado. Use .xlsx, .xlsm ou .csv', 'error');
-    return;
-  }
+  if(!file){ notify('Nenhum arquivo selecionado','error'); return; }
+
+  // Extensão — remove espaços e pega última parte após ponto
+  const parts = file.name.trim().split('.');
+  const ext   = parts[parts.length-1].toLowerCase().trim();
 
   document.getElementById('importDropzone').style.display = 'none';
   document.getElementById('importLog').innerHTML = '';
-  setImportProgress(10, 'Lendo arquivo...');
-  addImportLog(`📂 Arquivo: <b>${file.name}</b> (${(file.size/1024).toFixed(1)} KB)`);
+  document.getElementById('importLog').style.display = '';
+  document.getElementById('importProgress').style.display = '';
+  document.getElementById('importSummary').style.display  = 'none';
+  document.getElementById('importProgressBar').style.width = '5%';
+  document.getElementById('importProgressMsg').textContent = 'Lendo arquivo...';
+
+  addImportLog(`📂 Arquivo: <b>${file.name}</b>`);
+  addImportLog(`📌 Extensão detectada: <b>${ext}</b>`);
+  addImportLog(`📏 Tamanho: ${(file.size/1024).toFixed(1)} KB`);
+
+  if(!['xlsx','xlsm','xls','csv'].includes(ext)){
+    addImportLog(`❌ Extensão ".${ext}" não suportada. Use .xlsx ou .xlsm`, 'err');
+    return;
+  }
+
+  if(typeof XLSX === 'undefined'){
+    addImportLog('❌ Biblioteca XLSX não carregou. Verifique conexão com internet.', 'err');
+    return;
+  }
+  addImportLog('✅ XLSX.js pronto');
 
   const reader = new FileReader();
-  reader.onload = function(e){
-    setImportProgress(40, 'Processando planilha...');
+  reader.onerror = () => addImportLog('❌ FileReader falhou ao ler o arquivo.', 'err');
+  reader.onload  = function(e){
+    addImportLog('✅ Arquivo lido — processando...');
+    document.getElementById('importProgressBar').style.width = '40%';
     try {
       const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, {type:'array'});
-      addImportLog(`📋 Abas encontradas: ${wb.SheetNames.join(', ')}`);
-      setImportProgress(60, 'Identificando aba de dados...');
+      addImportLog(`   Bytes: ${data.length}`);
+
+      const wb = XLSX.read(data, {
+        type:       'array',
+        bookVBA:    false,
+        cellDates:  false,
+        cellNF:     false,
+        cellStyles: false,
+        sheetRows:  0
+      });
+
+      addImportLog(`✅ Workbook lido! Abas: <b>${wb.SheetNames.join(', ')}</b>`);
+      document.getElementById('importProgressBar').style.width = '60%';
       parseWorkbook(wb);
+
     } catch(err){
-      addImportLog(`❌ Erro ao ler arquivo: ${err.message}`, 'err');
-      setImportProgress(0, 'Falha na leitura');
+      addImportLog(`❌ Erro ao processar: ${err.message}`, 'err');
+      addImportLog('💡 Tente salvar como .xlsx no Excel e importar novamente.', 'warn');
+      document.getElementById('importProgressBar').style.width = '0%';
+      document.getElementById('importProgressMsg').textContent = 'Erro';
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2362,11 +2395,21 @@ function parseWorkbook(wb){
   const descCol   = col(['descri','description'], 3);
   const familyCol = col(['famil'], 4);
   const riskCol   = col(['analise de risco','risco','risk'], 5);
-  const tipoCol   = col(['planejado','realizado'], 6);
   const janCol    = col(['jan'], 7);
   const respCol   = col(['responsav','responsavel'], 19);
   const resultCol = col(['resultado','result'], 20);
   const obsCol    = col(['observ','obs'], 22);
+
+  // tipoCol: procura "Planejado" nas primeiras linhas de dados (não está no cabeçalho)
+  let tipoCol = 6; // padrão
+  for(let i=headerRow+1; i<Math.min(headerRow+5, rows.length); i++){
+    const r = rows[i]||[];
+    for(let ci=0; ci<r.length; ci++){
+      const v = norm(r[ci]||'');
+      if(v==='planejado'||v==='realizado'){ tipoCol=ci; break; }
+    }
+    if(tipoCol!==6) break;
+  }
 
   addImportLog(`🗺️ SAP:${sapCol} PN:${pnCol} Cliente:${clientCol} JAN:${janCol} Resp:${respCol} Result:${resultCol}`);
 
@@ -2517,7 +2560,7 @@ function closeModal(id){ document.getElementById(id).classList.remove('active');
 function toggleTheme(){
   document.body.classList.toggle('light');
   const isLight = document.body.classList.contains('light');
-  localStorage.setItem('theme_t1', isLight?'light':'dark');
+  try { localStorage.setItem('theme_t1', isLight?'light':'dark'); } catch(e) {}
   document.getElementById('themeIcon').textContent = isLight?'☀️':'🌙';
   setTimeout(()=>{ renderCharts(); if(document.getElementById('view-analytics').style.display!=='none') renderAnalytics(); },50);
 }
