@@ -11,6 +11,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<!-- FIX 4: DOMPurify para sanitização de HTML de documentos externos -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <style>
 :root {
   --bg: #07090f;
@@ -59,12 +61,10 @@ body{
   min-height:100vh;
   transition:background .3s,color .3s;
 }
-/* SCROLLBAR */
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--surface);}
 ::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:10px;}
 
-/* LAYOUT */
 .app{display:flex;min-height:100vh;}
 .sidebar{
   width:240px;min-width:240px;
@@ -83,94 +83,51 @@ body{
 }
 .sidebar-logo .brand{
   font-family:'Syne',sans-serif;
-  font-size:18px;
-  font-weight:800;
+  font-size:18px;font-weight:800;
   background:var(--grad);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   letter-spacing:-0.5px;
 }
-.sidebar-logo .sub{
-  font-size:10px;
-  color:var(--text-secondary);
-  text-transform:uppercase;
-  letter-spacing:1.5px;
-  margin-top:4px;
-}
-.sidebar-year{
-  display:inline-block;
-  background:var(--grad);
-  color:white;
-  font-size:9px;
-  font-weight:700;
-  padding:2px 7px;
-  border-radius:20px;
-  margin-top:6px;
-  letter-spacing:1px;
-}
+.sidebar-logo .sub{font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px;}
+.sidebar-year{display:inline-block;background:var(--grad);color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:6px;letter-spacing:1px;}
 .sidebar-nav{flex:1;padding:0 12px;}
 .nav-item{
   display:flex;align-items:center;gap:12px;
-  padding:12px 16px;
-  border-radius:10px;
-  cursor:pointer;
-  font-size:13px;
-  font-weight:500;
-  color:var(--text-secondary);
-  transition:all .2s;
-  margin-bottom:4px;
-  white-space:nowrap;
-  overflow:hidden;
+  padding:12px 16px;border-radius:10px;
+  cursor:pointer;font-size:13px;font-weight:500;
+  color:var(--text-secondary);transition:all .2s;
+  margin-bottom:4px;white-space:nowrap;overflow:hidden;
 }
 .nav-item:hover{color:var(--text);background:var(--card);}
 .nav-item.active{background:var(--grad);color:#fff;}
 .nav-icon{font-size:17px;flex-shrink:0;}
-.sidebar-footer{
-  padding:16px 20px;
-  border-top:1px solid var(--border);
-  margin-top:auto;
-}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);margin-top:auto;}
 .theme-toggle{
-  width:100%;
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;
-  border-radius:10px;
-  background:var(--card);
-  border:1px solid var(--border);
-  color:var(--text);
-  cursor:pointer;
-  font-size:13px;font-weight:500;
-  transition:all .2s;
-  white-space:nowrap;
+  width:100%;display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);
+  color:var(--text);cursor:pointer;font-size:13px;font-weight:500;
+  transition:all .2s;white-space:nowrap;
 }
 .theme-toggle:hover{border-color:var(--accent);}
 
-/* MAIN */
 .main{flex:1;overflow-x:hidden;}
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:20px 32px;
-  background:var(--surface);
+  padding:20px 32px;background:var(--surface);
   border-bottom:1px solid var(--border);
-  position:sticky;top:0;z-index:50;
-  gap:16px;
+  position:sticky;top:0;z-index:50;gap:16px;
 }
-.topbar-title{
-  font-family:'Syne',sans-serif;
-  font-size:20px;font-weight:700;
-}
+.topbar-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;}
 .topbar-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 
-/* BOTÕES */
 .btn{
   display:inline-flex;align-items:center;gap:8px;
-  padding:10px 20px;
-  border-radius:10px;border:1px solid var(--border);
+  padding:10px 20px;border-radius:10px;border:1px solid var(--border);
   background:var(--card);color:var(--text);
-  font-size:13px;font-weight:500;
-  cursor:pointer;transition:all .2s;
-  font-family:'DM Sans',sans-serif;
-  white-space:nowrap;
+  font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;
+  font-family:'DM Sans',sans-serif;white-space:nowrap;
 }
 .btn:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-sm);}
 .btn-primary{background:var(--grad);color:#fff;border:none;}
@@ -182,147 +139,54 @@ body{
 .btn-sm{padding:7px 14px;font-size:12px;}
 .btn-icon{width:40px;height:40px;padding:0;justify-content:center;border-radius:10px;}
 
-/* CONTEÚDO */
 .content{padding:28px 32px;}
 
-/* MÉTRICAS */
-.metrics-grid{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:16px;
-  margin-bottom:28px;
-}
+.metrics-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;}
 .metric-card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:20px;
-  transition:all .3s;
-  position:relative;
-  overflow:hidden;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:20px;transition:all .3s;
+  position:relative;overflow:hidden;
 }
 .metric-card::before{
   content:'';position:absolute;top:0;right:0;
-  width:80px;height:80px;
-  background:var(--grad);
-  opacity:.05;
-  border-radius:50%;
-  transform:translate(20px,-20px);
+  width:80px;height:80px;background:var(--grad);
+  opacity:.05;border-radius:50%;transform:translate(20px,-20px);
 }
 .metric-card:hover{border-color:var(--border-hover);transform:translateY(-3px);box-shadow:var(--glow);}
-.metric-icon{
-  font-size:22px;
-  width:44px;height:44px;
-  border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:14px;
-}
+.metric-icon{font-size:22px;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
 .metric-icon.blue{background:rgba(0,198,255,.1);}
 .metric-icon.green{background:rgba(0,230,118,.1);}
 .metric-icon.red{background:rgba(255,61,87,.1);}
 .metric-icon.orange{background:rgba(255,108,47,.1);}
 .metric-icon.purple{background:rgba(168,85,247,.1);}
-.metric-value{
-  font-family:'Syne',sans-serif;
-  font-size:30px;font-weight:800;
-  color:var(--text);
-  line-height:1;
-  margin-bottom:6px;
-}
+.metric-value{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--text);line-height:1;margin-bottom:6px;}
 .metric-label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.8px;}
-.metric-trend{
-  font-size:11px;margin-top:8px;
-  display:flex;align-items:center;gap:4px;
-}
-.trend-up{color:var(--success);}
-.trend-down{color:var(--danger);}
 
-/* GRÁFICOS */
 .charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:28px;}
-.chart-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:16px;padding:22px;
-}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;}
 .chart-card.wide{grid-column:span 2;}
-.chart-header{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:18px;
-}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
 .chart-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
 .chart-sub{font-size:11px;color:var(--text-secondary);margin-top:2px;}
 .chart-body{height:230px;position:relative;}
 
-/* GANTT */
 .gantt-section{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
-.gantt-toolbar{
-  display:flex;gap:12px;align-items:center;
-  padding:18px 22px;
-  background:var(--card2);
-  border-bottom:1px solid var(--border);
-  flex-wrap:wrap;
-}
-.search-box{
-  display:flex;align-items:center;gap:8px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:8px 14px;
-  flex:1;min-width:180px;
-}
-.search-box input{
-  background:transparent;border:none;
-  color:var(--text);font-size:13px;
-  outline:none;width:100%;
-  font-family:'DM Sans',sans-serif;
-}
+.gantt-toolbar{display:flex;gap:12px;align-items:center;padding:18px 22px;background:var(--card2);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;flex:1;min-width:180px;}
+.search-box input{background:transparent;border:none;color:var(--text);font-size:13px;outline:none;width:100%;font-family:'DM Sans',sans-serif;}
 .search-box input::placeholder{color:var(--text-secondary);}
-.filter-select{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:8px 12px;
-  color:var(--text);
-  font-size:13px;
-  outline:none;cursor:pointer;
-  font-family:'DM Sans',sans-serif;
-}
+.filter-select{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .filter-select option{background:var(--card);color:var(--text);}
 .gantt-wrap{overflow-x:auto;padding:20px 22px;}
-.gantt-head{
-  display:flex;
-  padding-left:280px;
-  margin-bottom:10px;
-  border-bottom:1px solid var(--border);
-  padding-bottom:10px;
-}
-.gantt-month-label{
-  flex:1;text-align:center;
-  font-size:11px;font-weight:600;
-  color:var(--text-secondary);
-  text-transform:uppercase;letter-spacing:.8px;
-}
-.gantt-row{
-  display:flex;align-items:center;
-  padding:8px 0;
-  border-radius:10px;
-  transition:all .2s;
-  cursor:pointer;
-}
+.gantt-head{display:flex;padding-left:280px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+.gantt-month-label{flex:1;text-align:center;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.8px;}
+.gantt-row{display:flex;align-items:center;padding:8px 0;border-radius:10px;transition:all .2s;cursor:pointer;}
 .gantt-row:hover{background:rgba(255,255,255,.03);}
 .gantt-info{width:280px;min-width:280px;padding-right:16px;}
 .gantt-item-title{font-size:13px;font-weight:600;margin-bottom:3px;}
-.gantt-item-sub{
-  display:flex;align-items:center;gap:6px;
-  font-size:11px;color:var(--text-secondary);
-}
+.gantt-item-sub{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);}
 .gantt-bars{flex:1;display:flex;gap:3px;height:40px;align-items:center;}
-.gantt-bar{
-  flex:1;height:32px;border-radius:7px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:600;
-  cursor:pointer;transition:all .2s;
-  position:relative;
-}
+.gantt-bar{flex:1;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;position:relative;}
 .gantt-bar:hover{transform:scaleY(1.2);z-index:5;}
 .bar-empty{background:var(--border);opacity:.35;}
 .bar-scheduled{background:linear-gradient(135deg,#00c6ff,#0072ff);color:#fff;}
@@ -330,34 +194,13 @@ body{
 .bar-alert{background:linear-gradient(135deg,#ff3d57,#c9002a);color:#fff;animation:pulse 1.8s infinite;}
 .bar-inprogress{background:linear-gradient(135deg,#ffb300,#e67e00);color:#fff;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.7;}}
-.gantt-tooltip{
-  position:absolute;bottom:calc(100% + 8px);left:50%;
-  transform:translateX(-50%);
-  background:var(--card2);color:var(--text);
-  padding:6px 10px;border-radius:8px;
-  font-size:11px;white-space:nowrap;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow-md);
-  display:none;z-index:50;pointer-events:none;
-}
+.gantt-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--card2);color:var(--text);padding:6px 10px;border-radius:8px;font-size:11px;white-space:nowrap;border:1px solid var(--border);box-shadow:var(--shadow-md);display:none;z-index:50;pointer-events:none;}
 .gantt-bar:hover .gantt-tooltip{display:block;}
-.gantt-legend{
-  display:flex;gap:20px;
-  padding:14px 22px;
-  border-top:1px solid var(--border);
-  background:var(--card2);
-  flex-wrap:wrap;
-}
+.gantt-legend{display:flex;gap:20px;padding:14px 22px;border-top:1px solid var(--border);background:var(--card2);flex-wrap:wrap;}
 .legend-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0;}
 .legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);}
 
-/* BADGES */
-.badge{
-  display:inline-flex;align-items:center;
-  padding:3px 9px;border-radius:20px;
-  font-size:10px;font-weight:600;
-  text-transform:uppercase;letter-spacing:.5px;
-}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
 .badge-client{background:rgba(0,198,255,.15);color:var(--accent);}
 .badge-green{background:rgba(0,230,118,.15);color:var(--success);}
 .badge-red{background:rgba(255,61,87,.15);color:var(--danger);}
@@ -365,202 +208,67 @@ body{
 .badge-orange{background:rgba(255,179,0,.15);color:var(--warning);}
 .badge-critical{background:rgba(255,61,87,.2);color:var(--danger);}
 
-/* MODAL */
-.modal-overlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.75);
-  backdrop-filter:blur(6px);
-  display:none;align-items:center;justify-content:center;
-  z-index:1000;padding:20px;
-}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
 .modal-overlay.active{display:flex;}
-.modal{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:20px;
-  width:100%;max-width:580px;
-  max-height:90vh;
-  overflow-y:auto;
-  animation:modalIn .25s ease;
-  box-shadow:var(--shadow-lg);
-}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;animation:modalIn .25s ease;box-shadow:var(--shadow-lg);}
 @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(16px);}to{opacity:1;transform:scale(1) translateY(0);}}
-.modal-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:24px 28px 0;
-  position:sticky;top:0;
-  background:var(--card);z-index:5;
-}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:24px 28px 0;position:sticky;top:0;background:var(--card);z-index:5;}
 .modal-head-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;}
-.modal-close-btn{
-  width:36px;height:36px;border-radius:9px;
-  background:var(--surface);border:1px solid var(--border);
-  color:var(--text);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;transition:all .2s;
-}
+.modal-close-btn{width:36px;height:36px;border-radius:9px;background:var(--surface);border:1px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;}
 .modal-close-btn:hover{background:var(--danger);border-color:var(--danger);color:#fff;transform:rotate(90deg);}
 .modal-body{padding:20px 28px 28px;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .form-group{display:flex;flex-direction:column;gap:6px;}
 .form-group.full{grid-column:span 2;}
 .form-label{font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.6px;}
-.form-input{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:11px 14px;
-  color:var(--text);
-  font-size:13px;
-  outline:none;
-  transition:border-color .2s;
-  font-family:'DM Sans',sans-serif;
-  width:100%;
-}
+.form-input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;font-family:'DM Sans',sans-serif;width:100%;}
 .form-input:focus{border-color:var(--accent);}
 .form-input.error{border-color:var(--danger);}
 .form-input::placeholder{color:var(--text-secondary);}
 textarea.form-input{resize:vertical;min-height:80px;}
 select.form-input option{background:var(--card);}
-.form-divider{
-  height:1px;background:var(--border);
-  grid-column:span 2;margin:4px 0;
-}
-.modal-footer{
-  display:flex;gap:10px;
-  padding:16px 28px;
-  border-top:1px solid var(--border);
-  background:var(--card);
-  position:sticky;bottom:0;
-}
+.form-divider{height:1px;background:var(--border);grid-column:span 2;margin:4px 0;}
+.modal-footer{display:flex;gap:10px;padding:16px 28px;border-top:1px solid var(--border);background:var(--card);position:sticky;bottom:0;}
 .modal-footer .btn{flex:1;}
 
-/* MESES GANTT no modal */
-.months-grid{
-  display:grid;grid-template-columns:repeat(6,1fr);
-  gap:6px;
-  grid-column:span 2;
-}
-.month-cell{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-}
+.months-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;grid-column:span 2;}
+.month-cell{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .month-cell label{font-size:10px;color:var(--text-secondary);font-weight:600;}
-.month-select{
-  width:100%;background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:7px;padding:5px 2px;
-  color:var(--text);font-size:11px;
-  outline:none;text-align:center;
-  cursor:pointer;font-family:'DM Sans',sans-serif;
-}
+.month-select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 2px;color:var(--text);font-size:11px;outline:none;text-align:center;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .month-select option{background:var(--card);}
 
-/* FILE */
-.file-zone{
-  grid-column:span 2;
-  border:2px dashed var(--border);
-  border-radius:12px;padding:18px;
-  text-align:center;cursor:pointer;
-  transition:all .2s;background:var(--surface);
-}
+.file-zone{grid-column:span 2;border:2px dashed var(--border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);}
 .file-zone:hover{border-color:var(--accent);background:rgba(0,198,255,.05);}
 .file-zone-label{font-size:13px;color:var(--text-secondary);margin-top:6px;}
 .file-zone-sub{font-size:11px;color:var(--text-secondary);opacity:.6;margin-top:3px;}
-.file-attached{
-  grid-column:span 2;
-  display:flex;align-items:center;gap:12px;
-  background:rgba(0,198,255,.08);
-  border:1px solid rgba(0,198,255,.2);
-  border-radius:12px;padding:14px;
-}
-.file-attached-icon{
-  width:42px;height:42px;border-radius:10px;
-  background:var(--grad);
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;color:#fff;flex-shrink:0;
-}
+.file-attached{grid-column:span 2;display:flex;align-items:center;gap:12px;background:rgba(0,198,255,.08);border:1px solid rgba(0,198,255,.2);border-radius:12px;padding:14px;}
+.file-attached-icon{width:42px;height:42px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;}
 .file-attached-info{flex:1;}
 .file-attached-name{font-size:13px;font-weight:600;}
 .file-attached-size{font-size:11px;color:var(--text-secondary);}
 
-/* ANALYTICS */
-.analytics-kpis{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:16px;margin-bottom:24px;
-}
-.kpi-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:14px;padding:20px;text-align:center;
-}
-.kpi-ring{
-  width:80px;height:80px;margin:0 auto 12px;
-  position:relative;
-}
+.analytics-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+.kpi-ring{width:80px;height:80px;margin:0 auto 12px;position:relative;}
 .kpi-ring svg{transform:rotate(-90deg);}
-.kpi-ring-val{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Syne',sans-serif;font-size:18px;font-weight:800;
-}
+.kpi-ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
 .kpi-name{font-size:12px;color:var(--text-secondary);}
 
-/* NOTIFICATIONS */
-.notif{
-  position:fixed;bottom:28px;right:28px;
-  background:var(--card);
-  border-left:4px solid var(--success);
-  border-radius:12px;padding:14px 20px;
-  display:flex;align-items:center;gap:12px;
-  box-shadow:var(--shadow-lg);
-  z-index:2000;
-  animation:slideIn .3s ease;
-  font-size:13px;font-weight:500;
-  max-width:320px;
-}
+.notif{position:fixed;bottom:28px;right:28px;background:var(--card);border-left:4px solid var(--success);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-lg);z-index:2000;animation:slideIn .3s ease;font-size:13px;font-weight:500;max-width:320px;}
 .notif.error{border-left-color:var(--danger);}
 .notif.warn{border-left-color:var(--warning);}
 @keyframes slideIn{from{transform:translateX(110%);opacity:0;}to{transform:translateX(0);opacity:1;}}
 
-/* LOADING */
-.loading{
-  position:fixed;inset:0;
-  background:rgba(7,9,15,.9);
-  backdrop-filter:blur(6px);
-  display:none;align-items:center;justify-content:center;
-  flex-direction:column;gap:16px;z-index:3000;
-}
+.loading{position:fixed;inset:0;background:rgba(7,9,15,.9);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:3000;}
 .loading.active{display:flex;}
-.spinner{
-  width:50px;height:50px;
-  border:3px solid var(--border);
-  border-top-color:var(--accent);
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-}
+.spinner{width:50px;height:50px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* EXPORT MENU */
-.export-menu{
-  position:absolute;top:calc(100% + 8px);right:0;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:8px;
-  min-width:180px;
-  box-shadow:var(--shadow-lg);
-  z-index:200;
-  animation:modalIn .2s ease;
-}
-.export-item{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;border-radius:8px;
-  cursor:pointer;font-size:13px;font-weight:500;
-  transition:background .15s;
-}
+.export-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;min-width:180px;box-shadow:var(--shadow-lg);z-index:200;animation:modalIn .2s ease;}
+.export-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:background .15s;}
 .export-item:hover{background:var(--card2);}
 .export-btn-wrap{position:relative;}
 
-/* RESPONSIVE */
 @media(max-width:1200px){
   .metrics-grid{grid-template-columns:repeat(3,1fr);}
   .charts-grid{grid-template-columns:1fr;}
@@ -584,221 +292,73 @@ select.form-input option{background:var(--card);}
   .file-zone,.file-attached{grid-column:1;}
 }
 
-/* ===== VISUALIZADOR DE ARQUIVO ===== */
-.file-viewer-overlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.92);
-  backdrop-filter:blur(10px);
-  display:none;flex-direction:column;
-  z-index:2000;
-}
+.file-viewer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);display:none;flex-direction:column;z-index:2000;}
 .file-viewer-overlay.active{display:flex;}
-.fv-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 24px;
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-  gap:12px;
-}
-.fv-title{
-  display:flex;align-items:center;gap:10px;
-  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
-  min-width:0;
-}
+.fv-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:12px;}
+.fv-title{display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;min-width:0;}
 .fv-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.fv-type-badge{
-  display:inline-flex;align-items:center;
-  padding:3px 10px;border-radius:20px;
-  font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.6px;
-  flex-shrink:0;
-}
+.fv-type-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;flex-shrink:0;}
 .fv-actions{display:flex;gap:8px;flex-shrink:0;}
-.fv-body{
-  flex:1;overflow:hidden;
-  display:flex;flex-direction:column;
-  position:relative;
-}
-/* PDF viewer */
+.fv-body{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 .fv-pdf-wrap{flex:1;display:flex;flex-direction:column;}
 .fv-pdf-wrap iframe{flex:1;border:none;width:100%;background:#fff;}
-/* Image viewer */
-.fv-img-wrap{
-  flex:1;display:flex;align-items:center;justify-content:center;
-  padding:24px;overflow:auto;
-}
-.fv-img-wrap img{
-  max-width:100%;max-height:100%;
-  object-fit:contain;
-  border-radius:8px;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
-  transition:transform .3s;
-}
-/* Excel/CSV viewer */
-.fv-table-wrap{
-  flex:1;overflow:auto;padding:20px 24px;
-}
-.fv-table-info{
-  display:flex;align-items:center;gap:12px;
-  margin-bottom:14px;flex-wrap:wrap;
-}
-.fv-sheet-btn{
-  padding:6px 14px;border-radius:8px;
-  background:var(--card);border:1px solid var(--border);
-  color:var(--text);font-size:12px;font-weight:500;
-  cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;
-}
+.fv-img-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;}
+.fv-img-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5);transition:transform .3s;}
+.fv-table-wrap{flex:1;overflow:auto;padding:20px 24px;}
+.fv-table-info{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.fv-sheet-btn{padding:6px 14px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
 .fv-sheet-btn.active,.fv-sheet-btn:hover{background:var(--grad);color:#fff;border:none;}
-.fv-table{
-  width:100%;border-collapse:collapse;font-size:12px;
-  min-width:600px;
-}
-.fv-table th{
-  background:var(--card2);color:var(--text);
-  padding:9px 14px;text-align:left;
-  border:1px solid var(--border);
-  font-weight:600;position:sticky;top:0;z-index:2;
-  font-size:11px;white-space:nowrap;
-}
-.fv-table td{
-  padding:8px 14px;
-  border:1px solid var(--border);
-  color:var(--text);vertical-align:top;
-}
+.fv-table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px;}
+.fv-table th{background:var(--card2);color:var(--text);padding:9px 14px;text-align:left;border:1px solid var(--border);font-weight:600;position:sticky;top:0;z-index:2;font-size:11px;white-space:nowrap;}
+.fv-table td{padding:8px 14px;border:1px solid var(--border);color:var(--text);vertical-align:top;}
 .fv-table tr:nth-child(even) td{background:rgba(255,255,255,.02);}
-.fv-table tr:hover td{background:var(--hover, rgba(0,198,255,.05));}
-/* Word / text viewer */
-.fv-doc-wrap{
-  flex:1;overflow:auto;padding:40px;
-  display:flex;justify-content:center;
-}
-.fv-doc-content{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:48px 56px;
-  max-width:800px;width:100%;
-  font-size:14px;line-height:1.8;
-  color:var(--text);
-}
-.fv-doc-content h1,.fv-doc-content h2,.fv-doc-content h3{
-  font-family:'Syne',sans-serif;
-  margin:20px 0 10px;color:var(--text);
-}
+.fv-table tr:hover td{background:rgba(0,198,255,.05);}
+.fv-doc-wrap{flex:1;overflow:auto;padding:40px;display:flex;justify-content:center;}
+.fv-doc-content{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:48px 56px;max-width:800px;width:100%;font-size:14px;line-height:1.8;color:var(--text);}
+.fv-doc-content h1,.fv-doc-content h2,.fv-doc-content h3{font-family:'Syne',sans-serif;margin:20px 0 10px;color:var(--text);}
 .fv-doc-content p{margin-bottom:10px;}
 .fv-doc-content table{width:100%;border-collapse:collapse;margin:14px 0;}
 .fv-doc-content th,.fv-doc-content td{padding:8px 12px;border:1px solid var(--border);}
 .fv-doc-content th{background:var(--card2);}
-/* Loading state */
-.fv-loading{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:16px;
-  color:var(--text-secondary);
-}
-.fv-spinner{
-  width:40px;height:40px;
-  border:3px solid var(--border);
-  border-top-color:var(--accent);
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-}
-/* Error state */
-.fv-error{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:12px;
-  color:var(--text-secondary);text-align:center;padding:40px;
-}
+.fv-loading{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text-secondary);}
+.fv-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
+.fv-error{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-secondary);text-align:center;padding:40px;}
 .fv-error-icon{font-size:48px;}
-/* Zoom controls for images */
-.fv-zoom{
-  position:absolute;bottom:20px;right:20px;
-  display:flex;gap:6px;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:10px;padding:6px;
-  box-shadow:var(--shadow-md);
-}
-.fv-zoom button{
-  width:32px;height:32px;border-radius:7px;
-  background:transparent;border:none;
-  color:var(--text);cursor:pointer;
-  font-size:16px;transition:background .15s;
-}
+.fv-zoom{position:absolute;bottom:20px;right:20px;display:flex;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:var(--shadow-md);}
+.fv-zoom button{width:32px;height:32px;border-radius:7px;background:transparent;border:none;color:var(--text);cursor:pointer;font-size:16px;transition:background .15s;}
 .fv-zoom button:hover{background:var(--card2);}
 
-/* ===== IMPORT MODAL ===== */
-.import-dropzone{
-  border:2px dashed var(--border-hover);
-  border-radius:14px;
-  padding:36px 24px;
-  text-align:center;
-  cursor:pointer;
-  transition:all .2s;
-  background:var(--surface);
-  position:relative;
-}
-.import-dropzone.drag-over{
-  border-color:var(--accent);
-  background:rgba(0,198,255,.06);
-  transform:scale(1.01);
-}
+.import-dropzone{border:2px dashed var(--border-hover);border-radius:14px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);position:relative;}
+.import-dropzone.drag-over{border-color:var(--accent);background:rgba(0,198,255,.06);transform:scale(1.01);}
 .import-dropzone-icon{font-size:48px;margin-bottom:12px;}
 .import-dropzone-title{font-size:16px;font-weight:700;margin-bottom:6px;font-family:'Syne',sans-serif;}
 .import-dropzone-sub{font-size:13px;color:var(--text-secondary);}
 .import-progress{margin-top:20px;display:none;}
 .import-progress-bar-wrap{height:8px;background:var(--card2);border-radius:8px;overflow:hidden;margin-bottom:8px;}
 .import-progress-bar{height:100%;background:var(--grad);border-radius:8px;transition:width .3s;}
-.import-log{
-  margin-top:16px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:14px;
-  font-size:12px;
-  line-height:1.8;
-  max-height:220px;
-  overflow-y:auto;
-  display:none;
-  font-family:monospace;
-  color:var(--text);
-}
+.import-log{margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;line-height:1.8;max-height:220px;overflow-y:auto;display:none;font-family:monospace;color:var(--text);}
 .import-log .log-ok{color:var(--success);}
 .import-log .log-warn{color:var(--warning);}
 .import-log .log-err{color:var(--danger);}
-.import-summary{
-  display:none;
-  margin-top:16px;
-  padding:16px;
-  background:rgba(0,198,255,.07);
-  border:1px solid rgba(0,198,255,.2);
-  border-radius:12px;
-  font-size:13px;
-}
+.import-summary{display:none;margin-top:16px;padding:16px;background:rgba(0,198,255,.07);border:1px solid rgba(0,198,255,.2);border-radius:12px;font-size:13px;}
 .import-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
 .import-summary-item{text-align:center;padding:10px;background:var(--card);border-radius:8px;}
 .import-summary-item .val{font-size:22px;font-weight:800;font-family:'Syne',sans-serif;}
 .import-summary-item .lbl{font-size:11px;color:var(--text-secondary);margin-top:2px;}
 
-/* VIEW MODAL */
 .view-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .view-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;}
 .view-item.full{grid-column:span 2;}
 .view-label{font-size:10px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
 .view-value{font-size:14px;font-weight:500;}
 .months-preview{display:flex;gap:3px;margin-top:10px;flex-wrap:wrap;}
-.mp-bar{
-  flex:1;min-width:20px;height:28px;border-radius:5px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:9px;font-weight:700;color:rgba(255,255,255,.8);
-}
+.mp-bar{flex:1;min-width:20px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.8);}
 </style>
 </head>
 <body>
 <div class="loading" id="loading"><div class="spinner"></div><span id="loadingMsg">Carregando...</span></div>
 
 <div class="app">
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="brand">T1 AUTOMOTIVE</div>
@@ -829,7 +389,6 @@ select.form-input option{background:var(--card);}
   </div>
 </aside>
 
-<!-- MAIN -->
 <main class="main">
   <div class="topbar">
     <div class="topbar-title" id="viewTitle">Dashboard</div>
@@ -875,7 +434,8 @@ select.form-input option{background:var(--card);}
         <div class="chart-header">
           <div><div class="chart-title">Nível de Risco</div><div class="chart-sub">Classificação das auditorias</div></div>
         </div>
-        <div class="chart-body"><canvas id="riskChart"></canvas></div>
+        <!-- FIX 1: ID renomeado de "riskChart" para "dashRiskChart" para evitar conflito com a tela Risk Assessment -->
+        <div class="chart-body"><canvas id="dashRiskChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-header">
@@ -949,109 +509,103 @@ select.form-input option{background:var(--card);}
       </div>
     </div>
   </div>
+
+  <!-- FIX 3: view-risk movido para DENTRO de .main, igual aos outros views -->
+  <div id="view-risk" class="content" style="display:none;">
+    <div style="margin-bottom:24px;">
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;">⚠️ Análise de Risco — Auditoria de Produto 2026</div>
+      <div style="font-size:13px;color:var(--text-secondary);">Röchling Automotive Brasil · Metodologia de pontuação por tipo de produto</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;">
+      <div class="metric-card" style="border-left:4px solid var(--danger);">
+        <div class="metric-icon red">🔴</div>
+        <div class="metric-value" id="riskCountCritico">2</div>
+        <div class="metric-label">Crítico (≥5)</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">2 auditorias/ano</div>
+      </div>
+      <div class="metric-card" style="border-left:4px solid var(--orange);">
+        <div class="metric-icon orange">🟠</div>
+        <div class="metric-value" id="riskCountAlto">4</div>
+        <div class="metric-label">Alto (3–4)</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">1 auditoria/ano</div>
+      </div>
+      <div class="metric-card" style="border-left:4px solid var(--warning);">
+        <div class="metric-icon" style="background:rgba(255,179,0,.15);">🟡</div>
+        <div class="metric-value" id="riskCountMedio">0</div>
+        <div class="metric-label">Médio (3–4)</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">1 auditoria/ano</div>
+      </div>
+      <div class="metric-card" style="border-left:4px solid var(--success);">
+        <div class="metric-icon green">🟢</div>
+        <div class="metric-value" id="riskCountBaixo">0</div>
+        <div class="metric-label">Baixo (&lt;3)</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">1 auditoria/ano</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+      <div class="chart-card" style="overflow:auto;">
+        <div class="chart-header">
+          <div><div class="chart-title">Matriz de Risco por Produto</div><div class="chart-sub">Score = Complexidade + Reclamações + CSR</div></div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Tipo de Produto</th>
+              <th style="text-align:left;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Família</th>
+              <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Complexidade</th>
+              <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Reclamações</th>
+              <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">CSR</th>
+              <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Score</th>
+              <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Nível</th>
+            </tr>
+          </thead>
+          <tbody id="riskTableBody"></tbody>
+        </table>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div><div class="chart-title">Score de Risco por Produto</div><div class="chart-sub">Linha vermelha = threshold crítico (≥5)</div></div>
+        </div>
+        <!-- FIX 1: ID exclusivo para o gráfico da tela Risk Assessment -->
+        <div class="chart-body"><canvas id="riskBarChart"></canvas></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:12px;">⚙️ Complexidade</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Embalagem</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-green">1</span></td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Injeção + Embalagem</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-yellow">2</span></td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Injeção + Montagem + Emb.</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-yellow">3</span></td></tr>
+          <tr><td style="padding:6px 8px;color:var(--text-secondary);">Injeção + Mont. + Teste + Emb.</td><td style="text-align:right;padding:6px 8px;"><span class="badge badge-red">4</span></td></tr>
+        </table>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:12px;">📢 Reclamações de Cliente</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Nenhuma reclamação</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-green">0</span></td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">1 a 3 reclamações</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-yellow">1</span></td></tr>
+          <tr><td style="padding:6px 8px;color:var(--text-secondary);">Mais de 3 reclamações</td><td style="text-align:right;padding:6px 8px;"><span class="badge badge-red">2</span></td></tr>
+        </table>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:12px;">📋 Classificação Final</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">&lt; 3 — Baixo Risco</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-green">1×/ano</span></td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">3 a 4 — Médio Risco</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-yellow">1×/ano</span></td></tr>
+          <tr><td style="padding:6px 8px;color:var(--text-secondary);">≥ 5 — Alto Risco</td><td style="text-align:right;padding:6px 8px;"><span class="badge badge-red">2×/ano</span></td></tr>
+        </table>
+        <div style="margin-top:12px;padding:10px;background:var(--card2);border-radius:8px;font-size:11px;color:var(--text-secondary);">
+          <b>CSR:</b> Requisito específico do cliente (Customer Specific Requirements) — vale +1 quando aplicável.
+        </div>
+      </div>
+    </div>
+  </div><!-- fim view-risk -->
+
 </main>
-</div>
-
-<!-- VIEW RISK ASSESSMENT -->
-<div id="view-risk" class="content" style="display:none;position:fixed;inset:0;left:200px;top:0;overflow-y:auto;padding:28px 32px;background:var(--bg);z-index:10;">
-
-  <!-- Header -->
-  <div style="margin-bottom:24px;">
-    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;">⚠️ Análise de Risco — Auditoria de Produto 2026</div>
-    <div style="font-size:13px;color:var(--text-secondary);">Röchling Automotive Brasil · Metodologia de pontuação por tipo de produto</div>
-  </div>
-
-  <!-- KPI cards por nível -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;">
-    <div class="metric-card" style="border-left:4px solid var(--danger);">
-      <div class="metric-icon red">🔴</div>
-      <div class="metric-value" id="riskCountCritico">2</div>
-      <div class="metric-label">Crítico (≥5)</div>
-      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">2 auditorias/ano</div>
-    </div>
-    <div class="metric-card" style="border-left:4px solid var(--orange);">
-      <div class="metric-icon orange">🟠</div>
-      <div class="metric-value" id="riskCountAlto">4</div>
-      <div class="metric-label">Alto (3–4)</div>
-      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">1 auditoria/ano</div>
-    </div>
-    <div class="metric-card" style="border-left:4px solid var(--warning);">
-      <div class="metric-icon" style="background:rgba(255,179,0,.15);">🟡</div>
-      <div class="metric-value" id="riskCountMedio">0</div>
-      <div class="metric-label">Médio (3–4)</div>
-      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">1 auditoria/ano</div>
-    </div>
-    <div class="metric-card" style="border-left:4px solid var(--success);">
-      <div class="metric-icon green">🟢</div>
-      <div class="metric-value" id="riskCountBaixo">0</div>
-      <div class="metric-label">Baixo (&lt;3)</div>
-      <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">1 auditoria/ano</div>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
-    <!-- Tabela de produtos -->
-    <div class="chart-card" style="overflow:auto;">
-      <div class="chart-header">
-        <div><div class="chart-title">Matriz de Risco por Produto</div><div class="chart-sub">Score = Complexidade + Reclamações + CSR</div></div>
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">
-        <thead>
-          <tr>
-            <th style="text-align:left;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Tipo de Produto</th>
-            <th style="text-align:left;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Família</th>
-            <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Complexidade</th>
-            <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Reclamações</th>
-            <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">CSR</th>
-            <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Score</th>
-            <th style="text-align:center;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--border);font-size:11px;">Nível</th>
-          </tr>
-        </thead>
-        <tbody id="riskTableBody"></tbody>
-      </table>
-    </div>
-
-    <!-- Gráfico de barras -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <div><div class="chart-title">Score de Risco por Produto</div><div class="chart-sub">Linha vermelha = threshold crítico (≥5)</div></div>
-      </div>
-      <div class="chart-body"><canvas id="riskChart"></canvas></div>
-    </div>
-  </div>
-
-  <!-- Critérios -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
-    <div class="chart-card">
-      <div class="chart-title" style="margin-bottom:12px;">⚙️ Complexidade</div>
-      <table style="width:100%;font-size:12px;border-collapse:collapse;">
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Embalagem</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-green">1</span></td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Injeção + Embalagem</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-yellow">2</span></td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Injeção + Montagem + Emb.</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-yellow">3</span></td></tr>
-        <tr><td style="padding:6px 8px;color:var(--text-secondary);">Injeção + Mont. + Teste + Emb.</td><td style="text-align:right;padding:6px 8px;"><span class="badge badge-red">4</span></td></tr>
-      </table>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title" style="margin-bottom:12px;">📢 Reclamações de Cliente</div>
-      <table style="width:100%;font-size:12px;border-collapse:collapse;">
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Nenhuma reclamação</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-green">0</span></td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">1 a 3 reclamações</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-yellow">1</span></td></tr>
-        <tr><td style="padding:6px 8px;color:var(--text-secondary);">Mais de 3 reclamações</td><td style="text-align:right;padding:6px 8px;"><span class="badge badge-red">2</span></td></tr>
-      </table>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title" style="margin-bottom:12px;">📋 Classificação Final</div>
-      <table style="width:100%;font-size:12px;border-collapse:collapse;">
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">&lt; 3 — Baixo Risco</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-green">1×/ano</span></td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-secondary);">3 a 4 — Médio Risco</td><td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);"><span class="badge badge-yellow">1×/ano</span></td></tr>
-        <tr><td style="padding:6px 8px;color:var(--text-secondary);">≥ 5 — Alto Risco</td><td style="text-align:right;padding:6px 8px;"><span class="badge badge-red">2×/ano</span></td></tr>
-      </table>
-      <div style="margin-top:12px;padding:10px;background:var(--card2);border-radius:8px;font-size:11px;color:var(--text-secondary);">
-        <b>CSR:</b> Requisito específico do cliente (Customer Specific Requirements) — vale +1 quando aplicável.
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <!-- MODAL IMPORTAR EXCEL -->
@@ -1062,8 +616,6 @@ select.form-input option{background:var(--card);}
       <button class="modal-close-btn" onclick="closeImportModal()">✕</button>
     </div>
     <div class="modal-body" style="padding:20px 24px;">
-
-      <!-- Dropzone -->
       <div class="import-dropzone" id="importDropzone"
            ondragover="event.preventDefault();this.classList.add('drag-over')"
            ondragleave="this.classList.remove('drag-over')"
@@ -1086,19 +638,13 @@ select.form-input option{background:var(--card);}
           </button>
         </div>
       </div>
-
-      <!-- Progress -->
       <div class="import-progress" id="importProgress" style="display:none;">
         <div class="import-progress-bar-wrap">
           <div class="import-progress-bar" id="importProgressBar" style="width:0%"></div>
         </div>
         <div style="font-size:12px;color:var(--text-secondary)" id="importProgressMsg">Lendo arquivo...</div>
       </div>
-
-      <!-- Log -->
       <div class="import-log" id="importLog" style="display:none;"></div>
-
-      <!-- Summary -->
       <div class="import-summary" id="importSummary" style="display:none;">
         <div style="font-weight:700;font-size:14px;">✅ Importação concluída!</div>
         <div class="import-summary-grid">
@@ -1106,15 +652,12 @@ select.form-input option{background:var(--card);}
           <div class="import-summary-item"><div class="val" id="impNew" style="color:var(--success)">0</div><div class="lbl">Novas</div></div>
           <div class="import-summary-item"><div class="val" id="impUpdated" style="color:var(--accent)">0</div><div class="lbl">Atualizadas</div></div>
         </div>
-        <div style="margin-top:12px;font-size:12px;color:var(--text-secondary);">
-          Escolha como aplicar os dados importados:
-        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--text-secondary);">Escolha como aplicar os dados importados:</div>
         <div style="display:flex;gap:10px;margin-top:10px;">
           <button class="btn btn-primary" style="flex:1" onclick="applyImport('merge')">🔀 Mesclar com existentes</button>
           <button class="btn" style="flex:1;background:var(--card2)" onclick="applyImport('replace')">🔄 Substituir tudo</button>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -1312,7 +855,7 @@ select.form-input option{background:var(--card);}
   </div>
 </div>
 
-<!-- ===== MODAL VISUALIZADOR DE ARQUIVO ===== -->
+<!-- MODAL VISUALIZADOR DE ARQUIVO -->
 <div class="file-viewer-overlay" id="fileViewer">
   <div class="fv-header">
     <div class="fv-title">
@@ -1335,26 +878,36 @@ select.form-input option{background:var(--card);}
 
 <script>
 // ===== VISUALIZADOR DE ARQUIVO =====
-
 const FILE_ICONS = {
-  pdf: '📕', jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️', bmp: '🖼️',
-  xls: '📗', xlsx: '📗', csv: '📊',
-  doc: '📘', docx: '📘', txt: '📝'
+  pdf:'📕',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',bmp:'🖼️',
+  xls:'📗',xlsx:'📗',csv:'📊',doc:'📘',docx:'📘',txt:'📝'
 };
 const FILE_COLORS = {
-  pdf: '#ff4757', jpg: '#a855f7', jpeg: '#a855f7', png: '#a855f7', gif: '#a855f7', webp: '#a855f7',
-  xls: '#00b248', xlsx: '#00b248', csv: '#00b248',
-  doc: '#0066ff', docx: '#0066ff', txt: '#ffb300'
+  pdf:'#ff4757',jpg:'#a855f7',jpeg:'#a855f7',png:'#a855f7',gif:'#a855f7',webp:'#a855f7',
+  xls:'#00b248',xlsx:'#00b248',csv:'#00b248',doc:'#0066ff',docx:'#0066ff',txt:'#ffb300'
 };
 
 let imgZoom = 1;
 
-function getFileExt(name) {
-  return (name || '').split('.').pop().toLowerCase();
-}
+// FIX 5: Estado agrupado em objeto para evitar poluição de escopo global
+const state = {
+  audits: [],
+  filtered: [],
+  currentViewId: null,
+  currentEditId: null,
+  charts: {},
+  nFileData: null,
+  eFileData: null,
+  importedAudits: []
+};
+
+// Atalhos para compatibilidade com código legado (evita reescrever todas as referências)
+function getAudits() { return state.audits; }
+
+function getFileExt(name) { return (name||'').split('.').pop().toLowerCase(); }
 
 function openFileViewer() {
-  const audit = audits.find(a => a.id === currentViewId);
+  const audit = state.audits.find(a => a.id === state.currentViewId);
   if (!audit?.file?.data) {
     notify('Nenhum arquivo com dados disponível. Reanexa o arquivo para visualizar.', 'warn');
     return;
@@ -1383,16 +936,11 @@ function closeFileViewer() {
 function renderFileContent(file, ext) {
   const body = document.getElementById('fvBody');
 
-  // === PDF ===
   if (ext === 'pdf') {
-    body.innerHTML = `
-      <div class="fv-pdf-wrap">
-        <iframe src="${file.data}" title="${file.name}"></iframe>
-      </div>`;
+    body.innerHTML = `<div class="fv-pdf-wrap"><iframe src="${file.data}" title="${file.name}"></iframe></div>`;
     return;
   }
 
-  // === IMAGENS ===
   if (['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) {
     imgZoom = 1;
     body.innerHTML = `
@@ -1402,12 +950,11 @@ function renderFileContent(file, ext) {
       <div class="fv-zoom">
         <button onclick="zoomImg(0.25)" title="Zoom in">＋</button>
         <button onclick="zoomImg(-0.25)" title="Zoom out">－</button>
-        <button onclick="zoomImg(0, true)" title="Resetar">⊙</button>
+        <button onclick="zoomImg(0,true)" title="Resetar">⊙</button>
       </div>`;
     return;
   }
 
-  // === EXCEL / XLSX ===
   if (['xls','xlsx'].includes(ext)) {
     body.innerHTML = `<div class="fv-loading"><div class="fv-spinner"></div><span>Lendo planilha...</span></div>`;
     try {
@@ -1423,7 +970,6 @@ function renderFileContent(file, ext) {
     return;
   }
 
-  // === CSV ===
   if (ext === 'csv') {
     body.innerHTML = `<div class="fv-loading"><div class="fv-spinner"></div><span>Lendo CSV...</span></div>`;
     try {
@@ -1443,7 +989,7 @@ function renderFileContent(file, ext) {
     return;
   }
 
-  // === WORD (.docx) ===
+  // FIX 4: Sanitização com DOMPurify antes de injetar HTML de documentos Word
   if (ext === 'docx') {
     body.innerHTML = `<div class="fv-loading"><div class="fv-spinner"></div><span>Processando documento Word...</span></div>`;
     try {
@@ -1453,9 +999,13 @@ function renderFileContent(file, ext) {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       mammoth.convertToHtml({ arrayBuffer: bytes.buffer })
         .then(result => {
+          // FIX 4: Sanitiza o HTML gerado pelo Mammoth para evitar XSS
+          const sanitized = (typeof DOMPurify !== 'undefined')
+            ? DOMPurify.sanitize(result.value || '')
+            : result.value || '';
           body.innerHTML = `
             <div class="fv-doc-wrap">
-              <div class="fv-doc-content">${result.value || '<p style="color:var(--text-secondary)">Documento vazio ou sem conteúdo legível.</p>'}</div>
+              <div class="fv-doc-content">${sanitized || '<p style="color:var(--text-secondary)">Documento vazio ou sem conteúdo legível.</p>'}</div>
             </div>`;
         })
         .catch(err => showFileError(body, 'Erro ao processar o documento Word.', err.message));
@@ -1465,16 +1015,11 @@ function renderFileContent(file, ext) {
     return;
   }
 
-  // === .doc (binário antigo) ===
   if (ext === 'doc') {
-    showFileError(body,
-      'Formato .doc (Word 97-2003) não suportado para visualização.',
-      'Converta para .docx para visualizar o conteúdo aqui.',
-      '📘', true);
+    showFileError(body, 'Formato .doc (Word 97-2003) não suportado para visualização.', 'Converta para .docx para visualizar o conteúdo aqui.', '📘', true);
     return;
   }
 
-  // === TXT ===
   if (ext === 'txt') {
     try {
       const text = decodeURIComponent(escape(atob(file.data.split(',')[1])));
@@ -1490,23 +1035,16 @@ function renderFileContent(file, ext) {
     return;
   }
 
-  // === TIPO NÃO SUPORTADO ===
-  showFileError(body,
-    `Tipo de arquivo ".${ext}" não pode ser visualizado aqui.`,
-    'Use o botão Baixar para abrir no seu computador.',
-    '📎', true);
+  showFileError(body, `Tipo de arquivo ".${ext}" não pode ser visualizado aqui.`, 'Use o botão Baixar para abrir no seu computador.', '📎', true);
 }
 
 function renderExcelWorkbook(body, wb) {
   const sheets = wb.SheetNames;
-  let activeSheet = 0;
 
   function renderSheet(idx) {
     const ws = wb.Sheets[sheets[idx]];
     const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-    if (!data || data.length === 0) {
-      return '<p style="color:var(--text-secondary);padding:20px">Planilha vazia.</p>';
-    }
+    if (!data || data.length === 0) return '<p style="color:var(--text-secondary);padding:20px">Planilha vazia.</p>';
     const headers = data[0];
     const rows = data.slice(1);
     const headerHtml = headers.map(h => `<th>${escapeHtml(String(h))}</th>`).join('');
@@ -1526,13 +1064,26 @@ function renderExcelWorkbook(body, wb) {
       <div id="fvTableContent">${renderSheet(0)}</div>
     </div>`;
 
-  // Expose switchSheet globally
-  window._xlsxWb = wb;
-  window._xlsxSheets = sheets;
-  window.switchSheet = function(idx) {
-    document.querySelectorAll('.fv-sheet-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-    document.getElementById('fvTableContent').innerHTML = renderSheet(idx);
-  };
+  // FIX 6: Usar closure em vez de window._xlsxWb para evitar poluição global
+  window.switchSheet = (function(wb, sheets) {
+    return function(idx) {
+      document.querySelectorAll('.fv-sheet-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+      const ws = wb.Sheets[sheets[idx]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      if (!data || data.length === 0) {
+        document.getElementById('fvTableContent').innerHTML = '<p style="color:var(--text-secondary);padding:20px">Planilha vazia.</p>';
+        return;
+      }
+      const headers = data[0];
+      const rows = data.slice(1);
+      const headerHtml = headers.map(h => `<th>${escapeHtml(String(h))}</th>`).join('');
+      const rowsHtml = rows.map(row =>
+        `<tr>${headers.map((_, ci) => `<td>${escapeHtml(String(row[ci] ?? ''))}</td>`).join('')}</tr>`
+      ).join('');
+      document.getElementById('fvTableContent').innerHTML =
+        `<table class="fv-table"><thead><tr>${headerHtml}</tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    };
+  })(wb, sheets);
 }
 
 function zoomImg(delta, reset) {
@@ -1567,20 +1118,20 @@ const MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov
 const RISK_COLORS = {Baixo:'var(--success)',Médio:'var(--warning)',Alto:'var(--orange)',Crítico:'var(--danger)'};
 const STATUS_LABELS = ['Não agendado','Agendado','Concluído','Em andamento','Atrasado'];
 const MAX_FILE = 10*1024*1024;
-let charts = {};
-let currentViewId = null;
-let currentEditId = null;
-let nFileData = null;
-let eFileData = null;
 
 // ======= DADOS INICIAIS =======
 const DEFAULT_AUDITS = [{"id":1,"sap":"111020103","pn":"04E   129712B","client":"VW","desc":"COLETOR DE ADMISSÃO 1.6L EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":2,"sap":"111020203","pn":"04C   133201K","client":"VW","desc":"COLETOR DE ADMISSÃO 1.0L EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,2,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 14/08/2023","file":null},{"id":3,"sap":"111736102","pn":"04C   129607B","client":"VW","desc":"FILTRO DE AR - FOX - 04C 129 607 B EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 19/12/2022","file":null},{"id":4,"sap":"112106502","pn":"04C   129709A","client":"VW","desc":"COLETOR DE ADMISSÃO 1.0L TSI EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":5,"sap":"112106800","pn":"04C   145673C","client":"VW","desc":"TUBO DE PRESSÃO 1.0 TSI EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":6,"sap":"112177302","pn":"24587185","client":"GM","desc":"COLETOR DE ADMISSÃO GV4 1.0L GASOLINA","family":"Motor/Radiador/AGS","risk":"Alto","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 09/05/2022","file":null},{"id":7,"sap":"112368001","pn":"04C   129611K","client":"VW","desc":"FILTRO DE AR - 04C 129 611K EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":8,"sap":"112644402","pn":"5GB   121407C","client":"AUDI _VW","desc":"DEGAS BOTTLE W/O SILICABAG MQB","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":9,"sap":"112831200","pn":"6858413-00","client":"BMW","desc":"REAR COVER AERODYNAMIC LEFT F48","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 17/05/2022","file":null},{"id":10,"sap":"112831400","pn":"6858414-00","client":"BMW","desc":"REAR COVER AERODYNAMIC RIGHT F48","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 17/05/2022","file":null},{"id":11,"sap":"112896802","pn":"24586808","client":"GM","desc":"INTAKE MANIFOLD GV4 1,4L/1.8L GASOHOL","family":"Motor/Radiador/AGS","risk":"Alto","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 25/04/2022","file":null},{"id":12,"sap":"113918001","pn":"2QB   129509","client":"VW","desc":"COLETOR DE AR 2QB 129509 MQB/MPI","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":13,"sap":"113918302","pn":"26322707","client":"GM","desc":"DUTO ENTRADA DE AR 26322707 GMB GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":14,"sap":"113918401","pn":"26209793","client":"GM","desc":"DUCT ASM-AIR INL 26209793 GMB GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":15,"sap":"113928605","pn":"13537035","client":"GM","desc":"RESERVATORIO EXPANSÃO 13537035 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":16,"sap":"113928802","pn":"26292495","client":"GM","desc":"CARCAÇA DE COMBUSTIVEL 26292495 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":17,"sap":"114106902","pn":"52051046","client":"GM","desc":"GM DEFLETOR DE ÁGUA SIST FLEX PM7 SCS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 17/11/2021","file":null},{"id":18,"sap":"114107102","pn":"52051047","client":"GM","desc":"DEFLETOR DE ÁGUA PM7 SCS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":19,"sap":"114107702","pn":"52088224","client":"GM","desc":"DEFLETOR INF.RAD.PM7 52088224 GM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":20,"sap":"114107902","pn":"52104021","client":"GM","desc":"DEFLETOR SUP.RAD.GSV 52104021 GM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última produção dia 12/01/2023","file":null},{"id":21,"sap":"114108102","pn":"52104020","client":"GM","desc":"DEFLETOR INF.RAD.GSV 52104020 GM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última produção dia 05/01/2023","file":null},{"id":22,"sap":"114108302","pn":"52087524","client":"GM","desc":"DEFLETOR SUP.RAD.SPIN 52087524 GM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última produção dia 20/09/2022","file":null},{"id":23,"sap":"114108506","pn":"26402607","client":"GM","desc":"PAINEL SEPARADOR AGUA -GRL 26602607 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":24,"sap":"114246303","pn":"26224654","client":"GM","desc":"TAMPA LATERAL DO CAPÔ 26224654 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":25,"sap":"114246403","pn":"26224655","client":"GM","desc":"TAMPA LATERAL DO CAPÔ 26224655 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":26,"sap":"114458801","pn":"94744776","client":"GM","desc":"DEFLETOR SUP. RAD. 4NB P&A 94744776 GM","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 29/08/2022","file":null},{"id":27,"sap":"114469801","pn":"04E   129611AB","client":"VW","desc":"FILTRO DE AR R4 TSI EA211","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":28,"sap":"114660801","pn":"24588756","client":"GM","desc":"BEAUTY ENGINE COVER 24588756 SGE","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":29,"sap":"114661001","pn":"26218100","client":"GM","desc":"DEFLETOR TURBO 1.2 ASPIRADO SUP 26218100","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":30,"sap":"114661101","pn":"26218101","client":"GM","desc":"DEFLETOR TURBO INFERIOR 26218101","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":31,"sap":"114661601","pn":"26248152","client":"GM","desc":"REFORÇO INFERIOR DO PARACHOQUE 26248152","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":32,"sap":"114685601","pn":"2GB   121407G","client":"VW","desc":"RESERVATÓRIO DE EXPANS. MQB27","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":33,"sap":"114685801","pn":"1SB 121 407 C","client":"VW","desc":"RESERVATÓRIO DE EXPANSÃO TSI","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,2,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 15/01/2022","file":null},{"id":34,"sap":"114690501","pn":"26227778","client":"GM","desc":"TAMPA LATERAL CAPÔ LH BSUV 26227778 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":35,"sap":"114690601","pn":"26227779","client":"GM","desc":"TAMPA LATERAL CAPÔ RH BSUV 26227779 GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":36,"sap":"114691102","pn":"84751133","client":"GM","desc":"PAINEL SEPARADOR AGUA 84751133 GMI700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":37,"sap":"114691302","pn":"84886702","client":"GM","desc":"EXTENSIONS RH 84886702 GMI700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":38,"sap":"114691402","pn":"84886703","client":"GM","desc":"EXTENSIONS LH 84886703 GMI700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":39,"sap":"114691501","pn":"26235211","client":"GM","desc":"ESCUDO PROTETOR DE AGUA 26235211 B-CAR","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":40,"sap":"114883601","pn":"26218102","client":"GM","desc":"DEFLETO DE AR SUP - 102 JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":41,"sap":"114883701","pn":"26218103","client":"GM","desc":"DEFLETOR DE AR INF, XXX103 JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":42,"sap":"114885501","pn":"26271784","client":"GM","desc":"DEFLETOR DE AR SUP 26271784 JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":43,"sap":"114885601","pn":"26271785","client":"GM","desc":"DEFLETOR DE AR INF 26271785 JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":44,"sap":"114891001","pn":"26292497","client":"GM","desc":"CARCAÇA DE COMBUSTIVEL 26292497 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":45,"sap":"114891101","pn":"26292496","client":"GM","desc":"DOOR 4NB ASM-F/TNK FIL 26292496 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":46,"sap":"114891203","pn":"26369112","client":"GM","desc":"CARCAÇA DE COMBUSTIVEL BSUV GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":47,"sap":"114891301","pn":"26228004","client":"GM","desc":"DOOR BSUV ASM-F/TNK FIL 26228004 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":48,"sap":"114108702","pn":"26279904 \n(New: 52177547)","client":"GM","desc":"SUPORTE DO PARACHOQUE LH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":49,"sap":"114896001","pn":"26279905","client":"GM","desc":"SUPORTE DE PARACHOQUE SM RH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":50,"sap":"114896301","pn":"26279908","client":"GM","desc":"SUPORTE DE PARACHOQUE LH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":51,"sap":"114896401","pn":"26279909","client":"GM","desc":"SUPORTE DE PARACHOQUE RH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":52,"sap":"114896501","pn":"26227735","client":"GM","desc":"SUPORTE DE PARACHOQUE LH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":53,"sap":"114896601","pn":"26227736","client":"GM","desc":"SUPORTE DE PARACHOQUE RH GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":54,"sap":"114903701","pn":"26223218","client":"GM","desc":"TAMPA COMBUSTIVEL - 5HB - 26223218 GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":55,"sap":"114933601","pn":"26273633","client":"GM","desc":"DEFLETOR DE AR SUP XXX33 26273633","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Peça não produziu no mês de Março. Produção realizada mês de Abril.","file":null},{"id":56,"sap":"114933701","pn":"26273634","client":"GM","desc":"DEFLETOR DE AR SUP XXX34 26273634","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":57,"sap":"115085805","pn":"26402609","client":"GM","desc":"PAINEL SEPARADOR AGUA C/ DEFLETOR GEM","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":58,"sap":"115163402","pn":"24589673","client":"GM","desc":"TUBO ENTRADA AGUA 24589673 GMI-700","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":59,"sap":"115325301","pn":"26251948","client":"GM","desc":"ESCUDO PROTETOR DE AGUA 26251948 B-SUV","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":60,"sap":"115407901","pn":"55282361","client":"Stellantis","desc":"Pescador de Oleo T4","family":"Motor/Radiador/AGS","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":61,"sap":"115482701","pn":"26252332","client":"GM","desc":"DEFLETOR DE AR INF ASM-RAD 1.2 NA JBSC","family":"Sob o capô","risk":"Baixo","months":[0,0,2,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":62,"sap":"115511501","pn":"84394077","client":"GM","desc":"DEFLETOR DE AR - RAD LD 84344077 GMI-700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 26/11/2021","file":null},{"id":63,"sap":"115511601","pn":"84394078","client":"GM","desc":"DEFLETOR DE AR - RAD LE 84394078 GMI-700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 26/11/2021","file":null},{"id":64,"sap":"115511701","pn":"84394079","client":"GM","desc":"DEFLETOR DE AR - RAD LD 84394079 GMI-700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":65,"sap":"115511801","pn":"84394080","client":"GM","desc":"DEFLETOR DE AR - RAD LE 84394080 GMI-700","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":66,"sap":"115519302","pn":"04C.129.709.N","client":"VW","desc":"COLETOR TSI 1.0L 04C 129 709 N PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":67,"sap":"115399502","pn":"04E.145.673.AP","client":"VW","desc":"Boost Air Pipe Flex 04E145673AP 1.4TSI","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":68,"sap":"115399602","pn":"04E.129.709.AS","client":"VW","desc":"Air Intake Manifold Flex/Sulev 1.4 TSI","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":69,"sap":"115519002","pn":"04E.129.712.BC","client":"VW","desc":"AIM MPI 1.0L 04C 133 201 AB PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":70,"sap":"115519202","pn":"04C.145.673.J","client":"VW","desc":"BAP TSI 1.0L 04C 145 673 J PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":71,"sap":"115519102","pn":"04C.133.201.AB","client":"VW","desc":"AIM MSI 1.6L 04E 129 712 BC PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":72,"sap":"113410202","pn":"214F66380R","client":"RENAULT","desc":"AGS 214F66380R Duster HJD LEV7","family":"Motor/Radiador/AGS","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":73,"sap":"115918801","pn":"OM654  A9075285900","client":"Mercedes-Benz","desc":"FILTRO AR RWD (Euro 5/Euro 6)","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":74,"sap":"113928605","pn":"13545832","client":"GM","desc":"RESERVATORIO EXPANSÃO GEM","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":75,"sap":"116066601","pn":"628112463R","client":"RENAULT","desc":"GUIA DE AR SUPERIOR RAD U79 Ph2","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 31/05/2023","file":null},{"id":76,"sap":"116066701","pn":"628118910R","client":"RENAULT","desc":"GUIA DE AR SUPERIOR RAS U79 Ph2","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 31/05/2023","file":null},{"id":77,"sap":"115717001","pn":"215593208R","client":"RENAULT","desc":"GUIDE AIR 215593208R HJD","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":78,"sap":"115408101","pn":"215593009R","client":"RENAULT","desc":"Guide Air FR UPR 215593009R HHA","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 14/12/2022","file":null},{"id":79,"sap":"115717101","pn":"215597989R","client":"RENAULT","desc":"GUIDE AIR G 215597989R HJD","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":80,"sap":"115408401","pn":"215598832R","client":"RENAULT","desc":"Guide Air Inf 215598832R HHA","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 12/12/2022","file":null},{"id":81,"sap":"115408001","pn":"215594592R","client":"RENAULT","desc":"Guide Air Main 215594592R HHA","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última produção dia 22/07/2022","file":null},{"id":82,"sap":"115583401","pn":"628114829R","client":"RENAULT","desc":"Guide Air RAS UPR 628114829R HHA","family":"Sob o capô","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 14/12/2022","file":null},{"id":83,"sap":"115408301","pn":"215589688R","client":"RENAULT","desc":"Guide Air RH RAS 215589688R 2 HHA","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":84,"sap":"115716901","pn":"215595364R","client":"RENAULT","desc":"LOWER RADIATOR AIR GUIDE 215595364R HJD","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":85,"sap":"113818701","pn":"55282251","client":"Stellantis","desc":"TUBO PESCADOR DE OLEO T3 55282251","family":"Motor/Radiador/AGS","risk":"Baixo","months":[2,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"Última Produção 14/12/2022","file":null},{"id":86,"sap":"115717201","pn":"215590466R","client":"RENAULT","desc":"UPPER RADIATOR AIR GUIDE 215590466R HJD","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":87,"sap":"115855801","pn":"04E145673AQ","client":"VW","desc":"Boost Air Pipe Sulev 04E145673AQ 1.4TSI PL6","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":88,"sap":"116184803","pn":"74200T14A M003","client":"HONDA","desc":"COWL TOP ASSY FR T00A","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":89,"sap":"115888301","pn":"26275596","client":"GM","desc":"GUIDE ASM-FRT BPR FASCIA RH TWIN","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":90,"sap":"115888401","pn":"26275597","client":"GM","desc":"GUIDE ASM-RR BPR FASCIA BS LH TWIN","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":91,"sap":"115888501","pn":"26275598","client":"GM","desc":"GUIDE ASM-RR BPR FASCIA BS LH TWIN","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":92,"sap":"115888601","pn":"26322632","client":"GM","desc":"GUIDE ASM-RR BPR FASCIA T/LP LH TWIN","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":93,"sap":"115918701","pn":"OM654  A9075283300","client":"Daimler","desc":"Filtro de Ar (Euro 3) OM654","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,2,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":94,"sap":"116474101","pn":"742003M6AM006","client":"HONDA","desc":"COWL TOP ASSY FR 3M0A","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":95,"sap":"114678202","pn":"12705416","client":"GM","desc":"Air Intake Manifold CSS Prime PL7","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":96,"sap":"116518601","pn":"12707080","client":"GM","desc":"Air Intake Manifold CSS Prime PL6","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":97,"sap":"115894102","pn":"26426641","client":"GM","desc":"ALOJAMENTO DO TUBO DE ENCHIMENTO DO TANQ","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":98,"sap":"114677203","pn":"26426643","client":"GM","desc":"PORTINHOLA DE ENCHIMENTO DO TANQUE DE CO","family":"Motor/Radiador/AGS","risk":"Alto","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":99,"sap":"117421502","pn":"26438172","client":"GM","desc":"PAINEL DA GRADE DE ENTRADA DE AR JCCC","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":100,"sap":"117421703","pn":"52176323","client":"GM","desc":"EXTENSAO DO PAINEL DA GRADE ENTRADA RH","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":101,"sap":"117421603","pn":"52176324","client":"GM","desc":"EXTENSAO DO PAINEL DA GRADE ENTRADA LH","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"Andréia Amâncio","status":"Aprovado","obs":"","file":null},{"id":102,"sap":"117930501","pn":"52174535","client":"GM","desc":"DEFLETOR SUPERIOR JCCC RS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":103,"sap":"117803100","pn":"26405888","client":"GM","desc":"DEFLETOR DE AR SUPERIOR JBUC RS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null},{"id":104,"sap":"117803200","pn":"26405889","client":"GM","desc":"DEFLETOR DE AR INFERIOR JBUC RS","family":"Sob o capô","risk":"Baixo","months":[0,0,0,0,0,0,0,0,0,0,0,0],"resp":"","status":"Pendente","obs":"","file":null}];
 
-// ======= ARMAZENAMENTO LOCAL + BACKUP JSON =======
-
+// ======= ARMAZENAMENTO LOCAL =======
 function saveAudits() {
-  try { localStorage.setItem('audits_t1_2026', JSON.stringify(audits)); } catch(e) {}
-  setCloudStatus('saved');
+  // FIX 3b: saveAudits avisa o usuário quando localStorage falha (quota excedida por anexos grandes)
+  try {
+    localStorage.setItem('audits_t1_2026', JSON.stringify(state.audits));
+    setCloudStatus('saved');
+  } catch(e) {
+    setCloudStatus('offline');
+    notify('⚠️ Dados não puderam ser salvos: armazenamento cheio. Exporte um backup JSON.', 'warn');
+  }
 }
 
 function loadLocalAudits() {
@@ -1591,37 +1142,32 @@ function loadLocalAudits() {
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch(e) {}
-  // localStorage bloqueado ou vazio — usa dados padrão do código
   return JSON.parse(JSON.stringify(DEFAULT_AUDITS));
 }
 
-function setCloudStatus(state) {
+function setCloudStatus(s) {
   const el = document.getElementById('cloudStatus');
   if (!el) return;
-  const states = {
+  const map = {
     saved:   '<span style="color:var(--success)">💾 Salvo</span>',
     loading: '🔄 Carregando...',
-    offline: '<span style="color:var(--warning)">📴 Offline</span>',
+    offline: '<span style="color:var(--warning)">📴 Offline / Quota</span>',
   };
-  el.innerHTML = states[state] || state;
+  el.innerHTML = map[s] || s;
 }
 
-// Exporta backup JSON
 function exportBackupJSON() {
-  const data = JSON.stringify(audits, null, 2);
+  const data = JSON.stringify(state.audits, null, 2);
   const blob = new Blob([data], {type:'application/json'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   const date = new Date().toISOString().slice(0,10);
-  a.href     = url;
-  a.download = `T1-Audit-Backup-${date}.json`;
-  a.click();
+  a.href = url; a.download = `T1-Audit-Backup-${date}.json`; a.click();
   URL.revokeObjectURL(url);
   notify('✅ Backup exportado com sucesso!');
   closeExportMenu();
 }
 
-// Importa backup JSON
 function importBackupJSON(file) {
   if (!file) return;
   const reader = new FileReader();
@@ -1630,8 +1176,8 @@ function importBackupJSON(file) {
       const data = JSON.parse(e.target.result);
       const list = Array.isArray(data) ? data : data.audits;
       if (!list || !list.length) { notify('Arquivo JSON inválido','error'); return; }
-      audits   = list;
-      filtered = [...audits];
+      state.audits   = list;
+      state.filtered = [...state.audits];
       saveAudits();
       updateFilterOptions();
       renderMetrics();
@@ -1646,8 +1192,8 @@ function importBackupJSON(file) {
   reader.readAsText(file);
 }
 
-let audits   = loadLocalAudits();
-let filtered = [...audits];
+state.audits   = loadLocalAudits();
+state.filtered = [...state.audits];
 
 // ======= INIT =======
 function init() {
@@ -1664,7 +1210,6 @@ function init() {
 
   buildMonthsGrid('n');
   buildMonthsGrid('e');
-
   setCloudStatus('saved');
   updateFilterOptions();
   renderMetrics();
@@ -1679,54 +1224,51 @@ function init() {
 }
 
 // ======= VIEW SWITCH =======
-function switchView(view, el){
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if(el) el.classList.add('active');
-  ['dashboard','gantt','analytics'].forEach(v=>{
-    document.getElementById('view-'+v).style.display = v===view?'':'none';
+function switchView(view, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  ['dashboard','gantt','analytics','risk'].forEach(v => {
+    const el = document.getElementById('view-' + v);
+    if (el) el.style.display = v === view ? '' : 'none';
   });
-  const riskView = document.getElementById('view-risk');
-  if(riskView) riskView.style.display = view==='risk' ? '' : 'none';
-  const titles = {dashboard:'Dashboard',gantt:'Cronograma Gantt',analytics:'Analytics',risk:'Risk Assessment'};
+  const titles = {dashboard:'Dashboard', gantt:'Cronograma Gantt', analytics:'Analytics', risk:'Risk Assessment'};
   document.getElementById('viewTitle').textContent = titles[view] || view;
-  if(view==='analytics') renderAnalytics();
-  if(view==='gantt') renderGantt();
-  if(view==='dashboard') renderCharts();
-  if(view==='risk') renderRisk();
+  if (view === 'analytics') renderAnalytics();
+  if (view === 'gantt') renderGantt();
+  if (view === 'dashboard') renderCharts();
+  if (view === 'risk') renderRisk();
 }
 
 // ======= RISK ASSESSMENT =======
 const RISK_DATA = [
-  {produto:'Cowl Grilles',      familia:'Sob o capô',         complexidade:3, reclamacoes:1, csr:0, score:4},
-  {produto:'Guide Rails',       familia:'Sob o capô',         complexidade:3, reclamacoes:1, csr:0, score:4},
-  {produto:'Baffles / Defletores', familia:'Sob o capô',      complexidade:2, reclamacoes:1, csr:0, score:3},
-  {produto:'Coletores de admissão', familia:'Motor/Radiador/AGS', complexidade:4, reclamacoes:2, csr:1, score:7},
-  {produto:'Filtro de ar',      familia:'Motor/Radiador/AGS', complexidade:3, reclamacoes:1, csr:1, score:5},
-  {produto:'Duto de ar',        familia:'Motor/Radiador/AGS', complexidade:4, reclamacoes:2, csr:1, score:7},
-  {produto:'Reservatórios',     familia:'Motor/Radiador/AGS', complexidade:4, reclamacoes:1, csr:1, score:6},
-  {produto:'Tampa/Módulo combustível', familia:'Motor/Radiador/AGS', complexidade:4, reclamacoes:1, csr:1, score:6},
-  {produto:'Tubo pescador de óleo', familia:'Motor/Radiador/AGS', complexidade:4, reclamacoes:0, csr:0, score:4},
+  {produto:'Cowl Grilles',           familia:'Sob o capô',          complexidade:3,reclamacoes:1,csr:0,score:4},
+  {produto:'Guide Rails',            familia:'Sob o capô',          complexidade:3,reclamacoes:1,csr:0,score:4},
+  {produto:'Baffles / Defletores',   familia:'Sob o capô',          complexidade:2,reclamacoes:1,csr:0,score:3},
+  {produto:'Coletores de admissão',  familia:'Motor/Radiador/AGS',  complexidade:4,reclamacoes:2,csr:1,score:7},
+  {produto:'Filtro de ar',           familia:'Motor/Radiador/AGS',  complexidade:3,reclamacoes:1,csr:1,score:5},
+  {produto:'Duto de ar',             familia:'Motor/Radiador/AGS',  complexidade:4,reclamacoes:2,csr:1,score:7},
+  {produto:'Reservatórios',          familia:'Motor/Radiador/AGS',  complexidade:4,reclamacoes:1,csr:1,score:6},
+  {produto:'Tampa/Módulo combustível',familia:'Motor/Radiador/AGS', complexidade:4,reclamacoes:1,csr:1,score:6},
+  {produto:'Tubo pescador de óleo',  familia:'Motor/Radiador/AGS',  complexidade:4,reclamacoes:0,csr:0,score:4},
 ];
 
-function getRiskLevel(score){
-  if(score>=5) return {label:'Crítico', color:'var(--danger)',   badge:'badge-red'};
-  if(score>=3) return {label:'Alto',    color:'var(--orange)',   badge:'badge-red'};
-  return            {label:'Baixo',   color:'var(--success)',  badge:'badge-green'};
+function getRiskLevel(score) {
+  if (score >= 5) return {label:'Crítico', color:'var(--danger)',  badge:'badge-red'};
+  if (score >= 3) return {label:'Alto',    color:'var(--orange)',  badge:'badge-red'};
+  return               {label:'Baixo',   color:'var(--success)', badge:'badge-green'};
 }
 
-function renderRisk(){
-  // KPIs
-  const critico = RISK_DATA.filter(r=>r.score>=5).length;
-  const alto    = RISK_DATA.filter(r=>r.score>=3&&r.score<5).length;
-  const baixo   = RISK_DATA.filter(r=>r.score<3).length;
+function renderRisk() {
+  const critico = RISK_DATA.filter(r => r.score >= 5).length;
+  const alto    = RISK_DATA.filter(r => r.score >= 3 && r.score < 5).length;
+  const baixo   = RISK_DATA.filter(r => r.score < 3).length;
   document.getElementById('riskCountCritico').textContent = critico;
   document.getElementById('riskCountAlto').textContent    = alto;
   document.getElementById('riskCountMedio').textContent   = 0;
   document.getElementById('riskCountBaixo').textContent   = baixo;
 
-  // Tabela
-  const sorted = [...RISK_DATA].sort((a,b)=>b.score-a.score);
-  document.getElementById('riskTableBody').innerHTML = sorted.map(r=>{
+  const sorted = [...RISK_DATA].sort((a, b) => b.score - a.score);
+  document.getElementById('riskTableBody').innerHTML = sorted.map(r => {
     const lv = getRiskLevel(r.score);
     const bar = `<div style="display:inline-flex;align-items:center;gap:6px;">
       <div style="width:${r.score*10}px;height:8px;border-radius:4px;background:${lv.color};min-width:8px;"></div>
@@ -1743,152 +1285,133 @@ function renderRisk(){
     </tr>`;
   }).join('');
 
-  // Gráfico
-  destroyCharts('riskChart');
+  // FIX 1: Usa o ID correto "riskBarChart" (exclusivo desta tela)
+  destroyCharts('riskBarChart');
   const {text} = getChartColors();
-  const labels = sorted.map(r=>r.produto.length>18?r.produto.substring(0,18)+'…':r.produto);
-  const scores = sorted.map(r=>r.score);
-  const bgColors = sorted.map(r=>getRiskLevel(r.score).color.replace('var(--danger)','rgba(255,61,87,.8)').replace('var(--orange)','rgba(255,120,60,.8)').replace('var(--success)','rgba(0,230,118,.8)'));
+  const labels = sorted.map(r => r.produto.length > 18 ? r.produto.substring(0,18)+'…' : r.produto);
+  const scores = sorted.map(r => r.score);
 
-  charts.riskChart = new Chart('riskChart',{
-    type:'bar',
-    data:{
+  state.charts.riskBarChart = new Chart('riskBarChart', {
+    type: 'bar',
+    data: {
       labels,
-      datasets:[{
-        label:'Score de Risco',
+      datasets: [{
+        label: 'Score de Risco',
         data: scores,
-        backgroundColor: sorted.map(r=>{
-          if(r.score>=5) return 'rgba(255,61,87,.8)';
-          if(r.score>=3) return 'rgba(255,140,60,.8)';
+        backgroundColor: sorted.map(r => {
+          if (r.score >= 5) return 'rgba(255,61,87,.8)';
+          if (r.score >= 3) return 'rgba(255,140,60,.8)';
           return 'rgba(0,230,118,.8)';
         }),
-        borderRadius:6,
-        borderSkipped:false,
+        borderRadius: 6,
+        borderSkipped: false,
       }]
     },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      indexAxis:'y',
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>`Score: ${ctx.raw} — ${getRiskLevel(ctx.raw).label}`}},
-        annotation:{
-          annotations:{
-            line1:{type:'line',xMin:5,xMax:5,borderColor:'rgba(255,61,87,.7)',borderWidth:2,borderDash:[5,5],
-              label:{content:'Crítico ≥5',display:true,position:'start',color:'rgba(255,61,87,1)',font:{size:10}}}
-          }
-        }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: {display: false},
+        tooltip: {callbacks: {label: ctx => `Score: ${ctx.raw} — ${getRiskLevel(ctx.raw).label}`}},
       },
-      scales:{
-        x:{min:0,max:10,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:text,stepSize:1}},
-        y:{grid:{display:false},ticks:{color:text,font:{size:11}}}
+      scales: {
+        x: {min:0, max:10, grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:text, stepSize:1}},
+        y: {grid:{display:false}, ticks:{color:text, font:{size:11}}}
       }
     }
   });
 }
 
 // ======= MÉTRICAS =======
-function renderMetrics(){
-  const total = filtered.length;
-  const approv = filtered.filter(a=>a.status==='Aprovado').length;
-  const reprov = filtered.filter(a=>a.status==='Reprovado').length;
-  const pend  = filtered.filter(a=>a.status==='Pendente').length;
-  const alerta = filtered.filter(a=>a.months.includes(4)).length;
-  const pct = total>0?Math.round((approv/total)*100):0;
-  const inprog = filtered.filter(a=>a.months.includes(3)).length;
+function renderMetrics() {
+  const total  = state.filtered.length;
+  const approv = state.filtered.filter(a => a.status === 'Aprovado').length;
+  const reprov = state.filtered.filter(a => a.status === 'Reprovado').length;
+  const pend   = state.filtered.filter(a => a.status === 'Pendente').length;
+  const pct    = total > 0 ? Math.round((approv/total)*100) : 0;
   document.getElementById('metricsGrid').innerHTML = `
-    <div class="metric-card">
-      <div class="metric-icon blue">📋</div>
-      <div class="metric-value">${total}</div>
-      <div class="metric-label">Total Auditorias</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-icon green">✅</div>
-      <div class="metric-value">${approv}</div>
-      <div class="metric-label">Aprovadas</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-icon red">❌</div>
-      <div class="metric-value">${reprov}</div>
-      <div class="metric-label">Reprovadas</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-icon orange">🕐</div>
-      <div class="metric-value">${pend}</div>
-      <div class="metric-label">Pendentes</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-icon purple">🎯</div>
-      <div class="metric-value">${pct}<span style="font-size:16px;font-weight:400;">%</span></div>
-      <div class="metric-label">Taxa Aprovação</div>
-    </div>
+    <div class="metric-card"><div class="metric-icon blue">📋</div><div class="metric-value">${total}</div><div class="metric-label">Total Auditorias</div></div>
+    <div class="metric-card"><div class="metric-icon green">✅</div><div class="metric-value">${approv}</div><div class="metric-label">Aprovadas</div></div>
+    <div class="metric-card"><div class="metric-icon red">❌</div><div class="metric-value">${reprov}</div><div class="metric-label">Reprovadas</div></div>
+    <div class="metric-card"><div class="metric-icon orange">🕐</div><div class="metric-value">${pend}</div><div class="metric-label">Pendentes</div></div>
+    <div class="metric-card"><div class="metric-icon purple">🎯</div><div class="metric-value">${pct}<span style="font-size:16px;font-weight:400;">%</span></div><div class="metric-label">Taxa Aprovação</div></div>
   `;
 }
 
-// ======= GRÁFICOS DASHBOARD =======
-function getChartColors(){
+// ======= GRÁFICOS =======
+function getChartColors() {
   const light = document.body.classList.contains('light');
   return {text: light?'#6b7280':'#7a8499', grid: light?'rgba(0,0,0,.08)':'rgba(255,255,255,.06)'};
 }
-function destroyCharts(...keys){
-  keys.forEach(k=>{ if(charts[k]){charts[k].destroy();charts[k]=null;} });
+
+function destroyCharts(...keys) {
+  keys.forEach(k => {
+    if (state.charts[k]) { state.charts[k].destroy(); state.charts[k] = null; }
+  });
 }
 
-function renderCharts(){
-  const {text,grid} = getChartColors();
-  destroyCharts('monthly','status','risk','client');
+function renderCharts() {
+  const {text, grid} = getChartColors();
+  // FIX 1: Usa "dashRiskChart" para o gráfico do dashboard
+  destroyCharts('monthly','status','dashRiskChart','client');
+
   const monthly = Array(12).fill(0);
-  audits.forEach(a=>a.months.forEach((v,i)=>{if(v>0)monthly[i]++;}));
-  charts.monthly = new Chart('monthlyChart',{
-    type:'bar',
-    data:{labels:MONTHS,datasets:[{data:monthly,backgroundColor:monthly.map(v=>v>0?'rgba(0,198,255,.75)':'rgba(255,255,255,.05)'),borderRadius:7,borderSkipped:false}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},x:{grid:{display:false},ticks:{color:text}}}}
+  state.audits.forEach(a => a.months.forEach((v,i) => { if(v>0) monthly[i]++; }));
+
+  state.charts.monthly = new Chart('monthlyChart', {
+    type: 'bar',
+    data: {labels:MONTHS, datasets:[{data:monthly, backgroundColor:monthly.map(v=>v>0?'rgba(0,198,255,.75)':'rgba(255,255,255,.05)'), borderRadius:7, borderSkipped:false}]},
+    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},x:{grid:{display:false},ticks:{color:text}}}}
   });
-  const appr = audits.filter(a=>a.status==='Aprovado').length;
-  const repr = audits.filter(a=>a.status==='Reprovado').length;
-  const pend = audits.filter(a=>a.status==='Pendente').length;
-  charts.status = new Chart('statusChart',{
-    type:'doughnut',
-    data:{labels:['Aprovado','Reprovado','Pendente'],datasets:[{data:[appr,repr,pend],backgroundColor:['rgba(0,230,118,.8)','rgba(255,61,87,.8)','rgba(255,179,0,.85)'],borderWidth:0,hoverOffset:8}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:text,padding:16,usePointStyle:true}}},cutout:'72%'}
+
+  const appr = state.audits.filter(a => a.status==='Aprovado').length;
+  const repr = state.audits.filter(a => a.status==='Reprovado').length;
+  const pend = state.audits.filter(a => a.status==='Pendente').length;
+  state.charts.status = new Chart('statusChart', {
+    type: 'doughnut',
+    data: {labels:['Aprovado','Reprovado','Pendente'], datasets:[{data:[appr,repr,pend], backgroundColor:['rgba(0,230,118,.8)','rgba(255,61,87,.8)','rgba(255,179,0,.85)'], borderWidth:0, hoverOffset:8}]},
+    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:text,padding:16,usePointStyle:true}}}, cutout:'72%'}
   });
-  const rc = {Baixo:0,Médio:0,Alto:0,Crítico:0};
-  audits.forEach(a=>rc[a.risk]=(rc[a.risk]||0)+1);
-  charts.risk = new Chart('riskChart',{
-    type:'bar',
-    data:{labels:Object.keys(rc),datasets:[{data:Object.values(rc),backgroundColor:['rgba(0,230,118,.8)','rgba(255,179,0,.8)','rgba(255,108,47,.8)','rgba(255,61,87,.8)'],borderRadius:7}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},y:{grid:{display:false},ticks:{color:text}}}}
+
+  const rc = {Baixo:0, Médio:0, Alto:0, Crítico:0};
+  state.audits.forEach(a => rc[a.risk] = (rc[a.risk]||0)+1);
+  // FIX 1: Canvas com ID "dashRiskChart" para o dashboard
+  state.charts.dashRiskChart = new Chart('dashRiskChart', {
+    type: 'bar',
+    data: {labels:Object.keys(rc), datasets:[{data:Object.values(rc), backgroundColor:['rgba(0,230,118,.8)','rgba(255,179,0,.8)','rgba(255,108,47,.8)','rgba(255,61,87,.8)'], borderRadius:7}]},
+    options: {indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},y:{grid:{display:false},ticks:{color:text}}}}
   });
+
   const cc = {};
-  audits.forEach(a=>cc[a.client]=(cc[a.client]||0)+1);
-  const sorted = Object.entries(cc).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  charts.client = new Chart('clientChart',{
-    type:'bar',
-    data:{labels:sorted.map(c=>c[0]),datasets:[{data:sorted.map(c=>c[1]),backgroundColor:'rgba(0,198,255,.7)',borderRadius:7}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},y:{grid:{display:false},ticks:{color:text}}}}
+  state.audits.forEach(a => cc[a.client] = (cc[a.client]||0)+1);
+  const sorted = Object.entries(cc).sort((a,b) => b[1]-a[1]).slice(0,6);
+  state.charts.client = new Chart('clientChart', {
+    type: 'bar',
+    data: {labels:sorted.map(c=>c[0]), datasets:[{data:sorted.map(c=>c[1]), backgroundColor:'rgba(0,198,255,.7)', borderRadius:7}]},
+    options: {indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},y:{grid:{display:false},ticks:{color:text}}}}
   });
 }
 
 // ======= ANALYTICS =======
-function renderAnalytics(){
-  const {text,grid} = getChartColors();
+function renderAnalytics() {
+  const {text, grid} = getChartColors();
   destroyCharts('trend','forecast','approval');
-  // KPIs
-  const total = audits.length;
-  const appr = audits.filter(a=>a.status==='Aprovado').length;
-  const pend = audits.filter(a=>a.status==='Pendente').length;
-  const pct = total>0?Math.round((appr/total)*100):0;
-  const alerts = audits.filter(a=>a.months.includes(4)).length;
-  const alertPct = total>0?Math.round((alerts/total)*100):0;
-  const withFile = audits.filter(a=>a.file).length;
-  const filePct = total>0?Math.round((withFile/total)*100):0;
+
+  const total = state.audits.length;
+  const appr  = state.audits.filter(a => a.status==='Aprovado').length;
+  const pct   = total > 0 ? Math.round((appr/total)*100) : 0;
+  const alerts   = state.audits.filter(a => a.months.includes(4)).length;
+  const alertPct = total > 0 ? Math.round((alerts/total)*100) : 0;
+  const withFile = state.audits.filter(a => a.file).length;
+  const filePct  = total > 0 ? Math.round((withFile/total)*100) : 0;
+
   const kpis = [
-    {label:'Taxa de Aprovação',val:pct,color:'#00e676'},
-    {label:'Risco de Alerta',val:alertPct,color:'#ff3d57'},
-    {label:'Documentação Anexada',val:filePct,color:'#00c6ff'},
+    {label:'Taxa de Aprovação',      val:pct,      color:'#00e676'},
+    {label:'Risco de Alerta',        val:alertPct, color:'#ff3d57'},
+    {label:'Documentação Anexada',   val:filePct,  color:'#00c6ff'},
   ];
-  document.getElementById('analyticsKpis').innerHTML = kpis.map(k=>`
+  document.getElementById('analyticsKpis').innerHTML = kpis.map(k => `
     <div class="kpi-card">
       <div class="kpi-ring">
         <svg width="80" height="80" viewBox="0 0 80 80">
@@ -1901,43 +1424,46 @@ function renderAnalytics(){
       </div>
       <div class="kpi-name">${k.label}</div>
     </div>`).join('');
-  // Charts
+
   const monthly = Array(12).fill(0);
-  audits.forEach(a=>a.months.forEach((v,i)=>{if(v>0)monthly[i]++;}));
-  const forecast = monthly.map((v,i)=>i<6?v:Math.round(monthly.slice(0,6).reduce((s,x)=>s+x,0)/6));
-  charts.trend = new Chart('trendChart',{
-    type:'line',
-    data:{labels:MONTHS,datasets:[{label:'Realizado',data:monthly,borderColor:'rgba(0,198,255,1)',backgroundColor:'rgba(0,198,255,.1)',tension:.4,fill:true,pointBackgroundColor:'rgba(0,198,255,1)',pointRadius:4,pointHoverRadius:6}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:text}}},scales:{y:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},x:{grid:{display:false},ticks:{color:text}}}}
+  state.audits.forEach(a => a.months.forEach((v,i) => { if(v>0) monthly[i]++; }));
+  const avg = monthly.slice(0,6).reduce((s,x) => s+x, 0) / 6;
+  const forecast = monthly.map((v,i) => i < 6 ? v : Math.round(avg));
+
+  state.charts.trend = new Chart('trendChart', {
+    type: 'line',
+    data: {labels:MONTHS, datasets:[{label:'Realizado', data:monthly, borderColor:'rgba(0,198,255,1)', backgroundColor:'rgba(0,198,255,.1)', tension:.4, fill:true, pointBackgroundColor:'rgba(0,198,255,1)', pointRadius:4, pointHoverRadius:6}]},
+    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:text}}}, scales:{y:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},x:{grid:{display:false},ticks:{color:text}}}}
   });
-  charts.forecast = new Chart('forecastChart',{
-    type:'line',
-    data:{labels:MONTHS,datasets:[
-      {label:'Realizado',data:monthly,borderColor:'rgba(0,198,255,1)',backgroundColor:'transparent',tension:.4,pointRadius:4},
-      {label:'Projeção',data:forecast,borderColor:'rgba(0,230,118,1)',backgroundColor:'transparent',borderDash:[6,4],tension:.4,pointRadius:3,pointStyle:'triangle'}
+
+  state.charts.forecast = new Chart('forecastChart', {
+    type: 'line',
+    data: {labels:MONTHS, datasets:[
+      {label:'Realizado', data:monthly, borderColor:'rgba(0,198,255,1)', backgroundColor:'transparent', tension:.4, pointRadius:4},
+      {label:'Projeção',  data:forecast, borderColor:'rgba(0,230,118,1)', backgroundColor:'transparent', borderDash:[6,4], tension:.4, pointRadius:3, pointStyle:'triangle'}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:text,usePointStyle:true}}},scales:{y:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},x:{grid:{display:false},ticks:{color:text}}}}
+    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:text,usePointStyle:true}}}, scales:{y:{beginAtZero:true,grid:{color:grid},ticks:{color:text,stepSize:1}},x:{grid:{display:false},ticks:{color:text}}}}
   });
-  // Aprovação por cliente
-  const clients = [...new Set(audits.map(a=>a.client))];
-  const appRates = clients.map(c=>{
-    const all = audits.filter(a=>a.client===c);
-    const ap = all.filter(a=>a.status==='Aprovado').length;
-    return all.length>0?Math.round((ap/all.length)*100):0;
+
+  const clients  = [...new Set(state.audits.map(a => a.client))];
+  const appRates = clients.map(c => {
+    const all = state.audits.filter(a => a.client === c);
+    const ap  = all.filter(a => a.status === 'Aprovado').length;
+    return all.length > 0 ? Math.round((ap/all.length)*100) : 0;
   });
-  charts.approval = new Chart('approvalChart',{
-    type:'bar',
-    data:{labels:clients,datasets:[{label:'% Aprovação',data:appRates,backgroundColor:appRates.map(v=>v>=80?'rgba(0,230,118,.8)':v>=50?'rgba(255,179,0,.8)':'rgba(255,61,87,.8)'),borderRadius:8}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100,grid:{color:grid},ticks:{color:text,callback:v=>v+'%'}},x:{grid:{display:false},ticks:{color:text}}}}
+  state.charts.approval = new Chart('approvalChart', {
+    type: 'bar',
+    data: {labels:clients, datasets:[{label:'% Aprovação', data:appRates, backgroundColor:appRates.map(v=>v>=80?'rgba(0,230,118,.8)':v>=50?'rgba(255,179,0,.8)':'rgba(255,61,87,.8)'), borderRadius:8}]},
+    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,max:100,grid:{color:grid},ticks:{color:text,callback:v=>v+'%'}},x:{grid:{display:false},ticks:{color:text}}}}
   });
 }
 
 // ======= GANTT =======
-function renderGantt(){
-  document.getElementById('ganttHead').innerHTML = MONTHS.map(m=>`<div class="gantt-month-label">${m}</div>`).join('');
-  document.getElementById('ganttCount').textContent = `${filtered.length} de ${audits.length} registros`;
-  document.getElementById('ganttRows').innerHTML = filtered.map(a=>{
-    const rColor = RISK_COLORS[a.risk]||'var(--accent)';
+function renderGantt() {
+  document.getElementById('ganttHead').innerHTML = MONTHS.map(m => `<div class="gantt-month-label">${m}</div>`).join('');
+  document.getElementById('ganttCount').textContent = `${state.filtered.length} de ${state.audits.length} registros`;
+  document.getElementById('ganttRows').innerHTML = state.filtered.map(a => {
+    const rColor = RISK_COLORS[a.risk] || 'var(--accent)';
     return `
       <div class="gantt-row" onclick="viewAudit(${a.id})">
         <div class="gantt-info">
@@ -1951,9 +1477,9 @@ function renderGantt(){
           </div>
         </div>
         <div class="gantt-bars">
-          ${a.months.map((v,i)=>{
-            const cls = ['bar-empty','bar-scheduled','bar-completed','bar-inprogress','bar-alert'][v]||'bar-empty';
-            const icon = ['','📅','✓','⚡','⚠'][v]||'';
+          ${a.months.map((v,i) => {
+            const cls  = ['bar-empty','bar-scheduled','bar-completed','bar-inprogress','bar-alert'][v] || 'bar-empty';
+            const icon = ['','📅','✓','⚡','⚠'][v] || '';
             return `<div class="gantt-bar ${cls}" onclick="event.stopPropagation();toggleMonth(${a.id},${i})">
               ${icon}
               <div class="gantt-tooltip">${MONTHS[i]}: ${STATUS_LABELS[v]||'Não agendado'}</div>
@@ -1964,28 +1490,36 @@ function renderGantt(){
   }).join('');
 }
 
-function toggleMonth(id,month){
-  const a = audits.find(a=>a.id===id);
-  if(a){ a.months[month]=(a.months[month]+1)%5; saveAudits(); filtered=[...audits]; filterGantt(); renderMetrics(); renderCharts(); notify('Status de '+MONTHS[month]+' atualizado'); }
+function toggleMonth(id, month) {
+  const a = state.audits.find(a => a.id === id);
+  if (a) {
+    a.months[month] = (a.months[month]+1) % 5;
+    saveAudits();
+    state.filtered = [...state.audits];
+    filterGantt();
+    renderMetrics();
+    renderCharts();
+    notify('Status de ' + MONTHS[month] + ' atualizado');
+  }
 }
 
 // ======= FILTROS =======
-function updateFilterOptions(){
-  const clients = [...new Set(audits.map(a=>a.client))].sort();
-  const families = [...new Set(audits.map(a=>a.family).filter(Boolean))].sort();
-  document.getElementById('clientFilter').innerHTML = '<option value="">Todos Clientes</option>' + clients.map(c=>`<option>${c}</option>`).join('');
+function updateFilterOptions() {
+  const clients  = [...new Set(state.audits.map(a => a.client))].sort();
+  const families = [...new Set(state.audits.map(a => a.family).filter(Boolean))].sort();
+  document.getElementById('clientFilter').innerHTML = '<option value="">Todos Clientes</option>' + clients.map(c => `<option>${c}</option>`).join('');
   const ff = document.getElementById('familyFilter');
-  if(ff) ff.innerHTML = '<option value="">Todas Famílias</option>' + families.map(f=>`<option>${f}</option>`).join('');
+  if (ff) ff.innerHTML = '<option value="">Todas Famílias</option>' + families.map(f => `<option>${f}</option>`).join('');
 }
 
-function filterGantt(){
-  const s = (document.getElementById('searchInput')?.value||'').toLowerCase();
-  const cl = document.getElementById('clientFilter')?.value||'';
-  const ri = document.getElementById('riskFilter')?.value||'';
-  const st = document.getElementById('statusFilter')?.value||'';
-  const fa = document.getElementById('familyFilter')?.value||'';
-  filtered = audits.filter(a=>{
-    const ms = !s||[a.sap,a.pn,a.client,a.desc,a.resp,a.family].some(x=>(x||'').toLowerCase().includes(s));
+function filterGantt() {
+  const s  = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const cl = document.getElementById('clientFilter')?.value || '';
+  const ri = document.getElementById('riskFilter')?.value || '';
+  const st = document.getElementById('statusFilter')?.value || '';
+  const fa = document.getElementById('familyFilter')?.value || '';
+  state.filtered = state.audits.filter(a => {
+    const ms = !s || [a.sap, a.pn, a.client, a.desc, a.resp, a.family].some(x => (x||'').toLowerCase().includes(s));
     return ms && (!cl||a.client===cl) && (!ri||a.risk===ri) && (!st||a.status===st) && (!fa||a.family===fa);
   });
   renderGantt();
@@ -1993,10 +1527,10 @@ function filterGantt(){
 }
 
 // ======= MESES GRID =======
-function buildMonthsGrid(prefix){
+function buildMonthsGrid(prefix) {
   const el = document.getElementById(prefix+'MonthsGrid');
-  if(!el) return;
-  el.innerHTML = MONTHS.map((m,i)=>`
+  if (!el) return;
+  el.innerHTML = MONTHS.map((m,i) => `
     <div class="month-cell">
       <label>${m}</label>
       <select class="month-select" id="${prefix}M${i}">
@@ -2008,103 +1542,108 @@ function buildMonthsGrid(prefix){
       </select>
     </div>`).join('');
 }
-function getMonths(prefix){ return Array.from({length:12},(_,i)=>parseInt(document.getElementById(prefix+'M'+i)?.value||0)); }
-function setMonths(prefix,months){ months.forEach((v,i)=>{ const el=document.getElementById(prefix+'M'+i); if(el)el.value=v; }); }
+function getMonths(prefix) { return Array.from({length:12}, (_,i) => parseInt(document.getElementById(prefix+'M'+i)?.value||0)); }
+function setMonths(prefix, months) { months.forEach((v,i) => { const el = document.getElementById(prefix+'M'+i); if(el) el.value=v; }); }
 
 // ======= ARQUIVOS =======
-function handleFile(prefix,e){
+function handleFile(prefix, e) {
   const f = e.target.files[0];
-  if(!f) return;
-  if(f.size>MAX_FILE){ notify('Arquivo muito grande (máx 10MB)','error'); return; }
+  if (!f) return;
+  if (f.size > MAX_FILE) { notify('Arquivo muito grande (máx 10MB)', 'error'); return; }
   const reader = new FileReader();
   reader.onload = ev => {
-    const data = {name:f.name,size:f.size,type:f.type,data:ev.target.result};
-    if(prefix==='n') nFileData=data;
-    else eFileData=data;
+    const data = {name:f.name, size:f.size, type:f.type, data:ev.target.result};
+    if (prefix === 'n') state.nFileData = data;
+    else state.eFileData = data;
     document.getElementById(prefix+'FileName').textContent = f.name;
     document.getElementById(prefix+'FileSize').textContent = (f.size/1024).toFixed(1)+' KB';
-    document.getElementById(prefix+'FilePreview').style.display='flex';
+    document.getElementById(prefix+'FilePreview').style.display = 'flex';
   };
   reader.readAsDataURL(f);
 }
-function removeFile(prefix){
-  if(prefix==='n') nFileData=null; else eFileData=null;
-  document.getElementById(prefix+'FilePreview').style.display='none';
-  document.getElementById(prefix+'File').value='';
+function removeFile(prefix) {
+  if (prefix === 'n') state.nFileData = null;
+  else state.eFileData = null;
+  document.getElementById(prefix+'FilePreview').style.display = 'none';
+  document.getElementById(prefix+'File').value = '';
 }
 
 // ======= NOVA AUDITORIA =======
-function openNewModal(){
-  nFileData=null;
-  document.getElementById('nFilePreview').style.display='none';
-  document.getElementById('nFile').value='';
-  ['nSap','nPn','nDesc','nFamily','nResp','nObs'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('nClient').value='VW';
-  document.getElementById('nRisk').value='Médio';
-  document.getElementById('nStatus').value='Aprovado';
-  setMonths('n',Array(12).fill(0));
+function openNewModal() {
+  state.nFileData = null;
+  document.getElementById('nFilePreview').style.display = 'none';
+  document.getElementById('nFile').value = '';
+  ['nSap','nPn','nDesc','nFamily','nResp','nObs'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('nClient').value = 'VW';
+  document.getElementById('nRisk').value   = 'Médio';
+  document.getElementById('nStatus').value = 'Aprovado';
+  setMonths('n', Array(12).fill(0));
   document.getElementById('newModal').classList.add('active');
 }
-function saveNew(){
-  const sap=document.getElementById('nSap').value.trim();
-  const pn=document.getElementById('nPn').value.trim();
-  if(!sap||!pn){
-    notify('Código SAP e PN são obrigatórios','error');
-    document.getElementById('nSap').classList.toggle('error',!sap);
-    document.getElementById('nPn').classList.toggle('error',!pn);
+
+function saveNew() {
+  const sap = document.getElementById('nSap').value.trim();
+  const pn  = document.getElementById('nPn').value.trim();
+  if (!sap || !pn) {
+    notify('Código SAP e PN são obrigatórios', 'error');
+    document.getElementById('nSap').classList.toggle('error', !sap);
+    document.getElementById('nPn').classList.toggle('error', !pn);
     return;
   }
-  const newId = (audits.length>0?Math.max(...audits.map(a=>a.id)):0)+1;
-  audits.push({id:newId,sap,pn,
-    client:document.getElementById('nClient').value,
-    desc:document.getElementById('nDesc').value.trim(),
-    family:document.getElementById('nFamily').value.trim(),
-    risk:document.getElementById('nRisk').value,
-    months:getMonths('n'),
-    resp:document.getElementById('nResp').value.trim(),
-    status:document.getElementById('nStatus').value,
-    obs:document.getElementById('nObs').value.trim(),
-    file:nFileData
+  // FIX 2: Geração de ID segura usando reduce (evita Math.max spread em array vazio)
+  const newId = state.audits.reduce((max, a) => Math.max(max, a.id || 0), 0) + 1;
+  state.audits.push({
+    id: newId, sap, pn,
+    client: document.getElementById('nClient').value,
+    desc:   document.getElementById('nDesc').value.trim(),
+    family: document.getElementById('nFamily').value.trim(),
+    risk:   document.getElementById('nRisk').value,
+    months: getMonths('n'),
+    resp:   document.getElementById('nResp').value.trim(),
+    status: document.getElementById('nStatus').value,
+    obs:    document.getElementById('nObs').value.trim(),
+    file:   state.nFileData
   });
   saveAudits();
-  filtered=[...audits];
+  state.filtered = [...state.audits];
   updateFilterOptions();
   filterGantt();
   renderMetrics();
   renderCharts();
   closeModal('newModal');
-  notify('Auditoria '+sap+' criada com sucesso!');
+  notify('Auditoria ' + sap + ' criada com sucesso!');
 }
 
 // ======= EDIÇÃO =======
-function openEditModal(id){
-  const a = audits.find(x=>x.id===id);
-  if(!a) return;
-  currentEditId=id;
-  eFileData = a.file ? {...a.file} : null;
+function openEditModal(id) {
+  const a = state.audits.find(x => x.id === id);
+  if (!a) return;
+  state.currentEditId = id;
+  state.eFileData = a.file ? {...a.file} : null;
   document.getElementById('editModalTitle').textContent = 'Editar — '+a.sap;
-  document.getElementById('eSap').value    = a.sap||'';
-  document.getElementById('ePn').value     = a.pn||'';
-  document.getElementById('eClient').value = a.client||'';
-  document.getElementById('eDesc').value   = a.desc||'';
-  document.getElementById('eFamily').value = a.family||'';
-  document.getElementById('eResp').value   = a.resp||'';
-  document.getElementById('eRisk').value   = a.risk||'Médio';
-  document.getElementById('eStatus').value = a.status||'Aprovado';
-  document.getElementById('eObs').value    = a.obs||'';
-  setMonths('e', a.months||Array(12).fill(0));
-  if(a.file){
+  document.getElementById('eSap').value    = a.sap    || '';
+  document.getElementById('ePn').value     = a.pn     || '';
+  document.getElementById('eClient').value = a.client || '';
+  document.getElementById('eDesc').value   = a.desc   || '';
+  document.getElementById('eFamily').value = a.family || '';
+  document.getElementById('eResp').value   = a.resp   || '';
+  document.getElementById('eRisk').value   = a.risk   || 'Médio';
+  document.getElementById('eStatus').value = a.status || 'Aprovado';
+  document.getElementById('eObs').value    = a.obs    || '';
+  setMonths('e', a.months || Array(12).fill(0));
+  if (a.file) {
     document.getElementById('eFileName').textContent = a.file.name;
     document.getElementById('eFileSize').textContent = (a.file.size/1024).toFixed(1)+' KB';
-    document.getElementById('eFilePreview').style.display='flex';
+    document.getElementById('eFilePreview').style.display = 'flex';
   } else {
-    document.getElementById('eFilePreview').style.display='none';
+    document.getElementById('eFilePreview').style.display = 'none';
   }
   document.getElementById('editModal').classList.add('active');
 }
-function saveEdit(){
-  const a = audits.find(x=>x.id===currentEditId);
-  if(!a) return;
+
+function saveEdit() {
+  const a = state.audits.find(x => x.id === state.currentEditId);
+  if (!a) return;
   a.sap    = document.getElementById('eSap').value.trim() || a.sap;
   a.pn     = document.getElementById('ePn').value.trim();
   a.client = document.getElementById('eClient').value.trim();
@@ -2115,39 +1654,40 @@ function saveEdit(){
   a.status = document.getElementById('eStatus').value;
   a.obs    = document.getElementById('eObs').value.trim();
   a.months = getMonths('e');
-  if(eFileData) a.file = eFileData;
+  if (state.eFileData) a.file = state.eFileData;
   saveAudits();
-  filtered=[...audits];
+  state.filtered = [...state.audits];
   updateFilterOptions();
   filterGantt();
   renderMetrics();
   renderCharts();
   closeModal('editModal');
-  notify('Auditoria '+a.sap+' atualizada!');
+  notify('Auditoria ' + a.sap + ' atualizada!');
 }
-function deleteAudit(){
-  if(!confirm('Excluir esta auditoria permanentemente?')) return;
-  audits = audits.filter(a=>a.id!==currentEditId);
+
+function deleteAudit() {
+  if (!confirm('Excluir esta auditoria permanentemente?')) return;
+  state.audits = state.audits.filter(a => a.id !== state.currentEditId);
   saveAudits();
-  filtered=[...audits];
+  state.filtered = [...state.audits];
   updateFilterOptions();
   filterGantt();
   renderMetrics();
   renderCharts();
   closeModal('editModal');
-  notify('Auditoria excluída','warn');
+  notify('Auditoria excluída', 'warn');
 }
 
 // ======= VISUALIZAÇÃO =======
-function viewAudit(id){
-  const a = audits.find(x=>x.id===id);
-  if(!a) return;
-  currentViewId=id;
+function viewAudit(id) {
+  const a = state.audits.find(x => x.id === id);
+  if (!a) return;
+  state.currentViewId = id;
   document.getElementById('viewModalTitle').textContent = a.sap;
-  const rColor = RISK_COLORS[a.risk]||'var(--accent)';
+  const rColor = RISK_COLORS[a.risk] || 'var(--accent)';
   const sColor = a.status==='Aprovado'?'var(--success)':a.status==='Pendente'?'var(--warning)':'var(--danger)';
-  const monthsHtml = `<div class="months-preview">${a.months.map((v,i)=>{
-    const bg = ['var(--border)','rgba(0,198,255,.7)','rgba(0,230,118,.7)','rgba(255,179,0,.7)','rgba(255,61,87,.7)'][v]||'var(--border)';
+  const monthsHtml = `<div class="months-preview">${a.months.map((v,i) => {
+    const bg = ['var(--border)','rgba(0,198,255,.7)','rgba(0,230,118,.7)','rgba(255,179,0,.7)','rgba(255,61,87,.7)'][v] || 'var(--border)';
     return `<div class="mp-bar" style="background:${bg};" title="${MONTHS[i]}: ${STATUS_LABELS[v]||'—'}">${MONTHS[i]}</div>`;
   }).join('')}</div>`;
   document.getElementById('viewGrid').innerHTML = `
@@ -2161,40 +1701,34 @@ function viewAudit(id){
     <div class="view-item full"><div class="view-label">Observações</div><div class="view-value" style="color:var(--text-secondary);font-size:13px;">${a.obs||'—'}</div></div>
     <div class="view-item full"><div class="view-label">Cronograma 2026</div>${monthsHtml}</div>
   `;
-  if(a.file){
+  if (a.file) {
     const ext = (a.file.name||'').split('.').pop().toLowerCase();
-    const icons = {pdf:'📕',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',xls:'📗',xlsx:'📗',csv:'📊',doc:'📘',docx:'📘',txt:'📝'};
+    const icons  = {pdf:'📕',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',xls:'📗',xlsx:'📗',csv:'📊',doc:'📘',docx:'📘',txt:'📝'};
     const colors = {pdf:'#ff4757',jpg:'#a855f7',jpeg:'#a855f7',png:'#a855f7',gif:'#a855f7',xls:'#00b248',xlsx:'#00b248',csv:'#00b248',doc:'#0066ff',docx:'#0066ff',txt:'#ffb300'};
     document.getElementById('viewFileName').textContent = a.file.name;
     document.getElementById('viewFileSize').textContent = (a.file.size/1024).toFixed(1)+' KB';
-    document.getElementById('viewFileIcon').textContent = icons[ext]||'📄';
-    document.getElementById('viewFileArea').style.display='flex';
-    // Only show visualizar if we have base64 data
+    document.getElementById('viewFileIcon').textContent = icons[ext] || '📄';
+    document.getElementById('viewFileArea').style.display = 'flex';
     const viewBtn = document.querySelector('#viewFileArea .btn-primary');
-    if(viewBtn) viewBtn.style.display = a.file.data ? '' : 'none';
+    if (viewBtn) viewBtn.style.display = a.file.data ? '' : 'none';
   } else {
-    document.getElementById('viewFileArea').style.display='none';
+    document.getElementById('viewFileArea').style.display = 'none';
   }
   document.getElementById('viewModal').classList.add('active');
 }
-function openEditFromView(){
-  closeModal('viewModal');
-  openEditModal(currentViewId);
-}
-function downloadAttachment(){
-  const a = audits.find(x=>x.id===currentViewId);
-  if(!a?.file?.data){ notify('Arquivo não disponível para download','warn'); return; }
+function openEditFromView() { closeModal('viewModal'); openEditModal(state.currentViewId); }
+function downloadAttachment() {
+  const a = state.audits.find(x => x.id === state.currentViewId);
+  if (!a?.file?.data) { notify('Arquivo não disponível para download','warn'); return; }
   const link = document.createElement('a');
-  link.href = a.file.data;
-  link.download = a.file.name;
-  link.click();
-  notify('Download iniciado: '+a.file.name);
+  link.href = a.file.data; link.download = a.file.name; link.click();
+  notify('Download iniciado: ' + a.file.name);
 }
 
 // ======= IMPRESSÃO =======
-function printAudit(){
-  const a = audits.find(x=>x.id===currentViewId);
-  if(!a) return;
+function printAudit() {
+  const a = state.audits.find(x => x.id === state.currentViewId);
+  if (!a) return;
   const win = window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Auditoria ${a.sap}</title>
   <style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e;}
@@ -2218,9 +1752,9 @@ function printAudit(){
     <tr><th>Status</th><td colspan="3"><span class="badge ${a.status==='Aprovado'?'ap':a.status==='Pendente'?'pe':'re'}">${a.status}</span></td></tr>
     <tr><th>Observações</th><td colspan="3">${a.obs||'—'}</td></tr>
     <tr><th>Cronograma</th><td colspan="3">
-      <div class="months">${a.months.map((v,i)=>{
+      <div class="months">${a.months.map((v,i) => {
         const bg=['#eee','#cce5ff','#d4edda','#fff3cd','#f8d7da'][v]||'#eee';
-        const c=['#666','#004085','#155724','#856404','#721c24'][v]||'#666';
+        const c =['#666','#004085','#155724','#856404','#721c24'][v]||'#666';
         return `<div class="mb" style="background:${bg};color:${c};">${MONTHS[i]}: ${STATUS_LABELS[v]||'—'}</div>`;
       }).join('')}
       </div>
@@ -2230,7 +1764,8 @@ function printAudit(){
   win.document.close();
   win.print();
 }
-function exportToPrint(){
+
+function exportToPrint() {
   const win = window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Auditorias T1 2026</title>
   <style>body{font-family:Arial,sans-serif;padding:30px;font-size:12px;}
@@ -2244,10 +1779,10 @@ function exportToPrint(){
   .pe{background:#fff3cd;color:#856404;padding:2px 6px;border-radius:10px;}
   </style></head><body>
   <h1>T1 Automotive — Auditorias 2026</h1>
-  <p style="margin-bottom:16px;color:#666;">Total: ${audits.length} auditorias | Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+  <p style="margin-bottom:16px;color:#666;">Total: ${state.audits.length} auditorias | Gerado em ${new Date().toLocaleString('pt-BR')}</p>
   <table>
     <tr><th>SAP</th><th>PN</th><th>Cliente</th><th>Descrição</th><th>Família</th><th>Risco</th><th>Responsável</th><th>Status</th></tr>
-    ${audits.map(a=>`<tr>
+    ${state.audits.map(a => `<tr>
       <td>${a.sap}</td><td>${a.pn}</td><td>${a.client}</td><td>${a.desc}</td>
       <td>${a.family}</td><td>${a.risk}</td><td>${a.resp}</td>
       <td><span class="${a.status==='Aprovado'?'ap':a.status==='Pendente'?'pe':'re'}">${a.status}</span></td>
@@ -2258,11 +1793,10 @@ function exportToPrint(){
 }
 
 // ======= EXPORTAÇÃO =======
-// ======= IMPORTAR EXCEL =======
-let importedAudits = [];
+let state_importedAudits = [];
 
-function openImportModal(){
-  importedAudits = [];
+function openImportModal() {
+  state_importedAudits = [];
   document.getElementById('importDropzone').style.display = '';
   document.getElementById('importProgress').style.display = 'none';
   document.getElementById('importLog').style.display = 'none';
@@ -2273,28 +1807,21 @@ function openImportModal(){
   document.getElementById('importFileInput').value = '';
   document.getElementById('importModal').classList.add('active');
 }
-
-function closeImportModal(){
-  document.getElementById('importModal').classList.remove('active');
-}
-
-function setImportProgress(pct, msg){
+function closeImportModal() { document.getElementById('importModal').classList.remove('active'); }
+function setImportProgress(pct, msg) {
   document.getElementById('importProgress').style.display = '';
   document.getElementById('importProgressBar').style.width = pct+'%';
   document.getElementById('importProgressMsg').textContent = msg;
 }
-
-function addImportLog(msg, type=''){
+function addImportLog(msg, type='') {
   const log = document.getElementById('importLog');
   log.style.display = '';
   log.innerHTML += `<div class="log-${type}">${msg}</div>`;
   log.scrollTop = log.scrollHeight;
 }
 
-function handleImportFile(file){
-  if(!file){ notify('Nenhum arquivo selecionado','error'); return; }
-
-  // Extensão — remove espaços e pega última parte após ponto
+function handleImportFile(file) {
+  if (!file) { notify('Nenhum arquivo selecionado','error'); return; }
   const parts = file.name.trim().split('.');
   const ext   = parts[parts.length-1].toLowerCase().trim();
 
@@ -2310,12 +1837,11 @@ function handleImportFile(file){
   addImportLog(`📌 Extensão detectada: <b>${ext}</b>`);
   addImportLog(`📏 Tamanho: ${(file.size/1024).toFixed(1)} KB`);
 
-  if(!['xlsx','xlsm','xls','csv'].includes(ext)){
+  if (!['xlsx','xlsm','xls','csv'].includes(ext)) {
     addImportLog(`❌ Extensão ".${ext}" não suportada. Use .xlsx ou .xlsm`, 'err');
     return;
   }
-
-  if(typeof XLSX === 'undefined'){
+  if (typeof XLSX === 'undefined') {
     addImportLog('❌ Biblioteca XLSX não carregou. Verifique conexão com internet.', 'err');
     return;
   }
@@ -2323,27 +1849,17 @@ function handleImportFile(file){
 
   const reader = new FileReader();
   reader.onerror = () => addImportLog('❌ FileReader falhou ao ler o arquivo.', 'err');
-  reader.onload  = function(e){
+  reader.onload = function(e) {
     addImportLog('✅ Arquivo lido — processando...');
     document.getElementById('importProgressBar').style.width = '40%';
     try {
       const data = new Uint8Array(e.target.result);
       addImportLog(`   Bytes: ${data.length}`);
-
-      const wb = XLSX.read(data, {
-        type:       'array',
-        bookVBA:    false,
-        cellDates:  false,
-        cellNF:     false,
-        cellStyles: false,
-        sheetRows:  0
-      });
-
+      const wb = XLSX.read(data, {type:'array', bookVBA:false, cellDates:false, cellNF:false, cellStyles:false, sheetRows:0});
       addImportLog(`✅ Workbook lido! Abas: <b>${wb.SheetNames.join(', ')}</b>`);
       document.getElementById('importProgressBar').style.width = '60%';
       parseWorkbook(wb);
-
-    } catch(err){
+    } catch(err) {
       addImportLog(`❌ Erro ao processar: ${err.message}`, 'err');
       addImportLog('💡 Tente salvar como .xlsx no Excel e importar novamente.', 'warn');
       document.getElementById('importProgressBar').style.width = '0%';
@@ -2353,42 +1869,33 @@ function handleImportFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-function parseWorkbook(wb){
+function parseWorkbook(wb) {
   const sheetNames = wb.SheetNames;
   addImportLog(`📋 Abas encontradas: ${sheetNames.join(', ')}`);
 
-  // Prioridade de aba
   const priority = ['2026','2025','2024','indicador','2023','2022.','2022','2021'];
   let targetSheet = null;
-  for(const p of priority){
-    const found = sheetNames.find(s=>s.toLowerCase().includes(p.toLowerCase()));
-    if(found){ targetSheet = found; break; }
+  for (const p of priority) {
+    const found = sheetNames.find(s => s.toLowerCase().includes(p.toLowerCase()));
+    if (found) { targetSheet = found; break; }
   }
-  if(!targetSheet) targetSheet = sheetNames[0];
+  if (!targetSheet) targetSheet = sheetNames[0];
   addImportLog(`✅ Aba selecionada: <b>${targetSheet}</b>`);
   setImportProgress(70, `Lendo aba "${targetSheet}"...`);
 
-  const ws = wb.Sheets[targetSheet];
+  const ws   = wb.Sheets[targetSheet];
   const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
-
   const norm = v => String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 
-  // Detecta linha de cabeçalho (até linha 10)
-  let headerRow = 2; // padrão Röchling
-  for(let i=0; i<Math.min(10, rows.length); i++){
+  let headerRow = 2;
+  for (let i = 0; i < Math.min(10, rows.length); i++) {
     const r = (rows[i]||[]).map(norm);
-    if(r.some(v=>v==='codigo sap'||v.includes('cod sap')||v==='sap')){
-      headerRow = i; break;
-    }
+    if (r.some(v => v==='codigo sap'||v.includes('cod sap')||v==='sap')) { headerRow = i; break; }
   }
   addImportLog(`📌 Cabeçalho na linha ${headerRow+1}`);
 
-  // Mapeia colunas
   const hdr = (rows[headerRow]||[]).map(norm);
-  const col = (terms, fb) => {
-    for(const t of terms){ const i=hdr.findIndex(h=>h.includes(t)); if(i>=0) return i; }
-    return fb;
-  };
+  const col = (terms, fb) => { for(const t of terms){const i=hdr.findIndex(h=>h.includes(t));if(i>=0)return i;} return fb; };
   const sapCol    = col(['codigo sap','cod sap','sap'], 0);
   const pnCol     = col(['pn cliente','teilenummer','pn '], 1);
   const clientCol = col(['cliente','cust'], 2);
@@ -2400,118 +1907,101 @@ function parseWorkbook(wb){
   const resultCol = col(['resultado','result'], 20);
   const obsCol    = col(['observ','obs'], 22);
 
-  // tipoCol: procura "Planejado" nas primeiras linhas de dados (não está no cabeçalho)
-  let tipoCol = 6; // padrão
-  for(let i=headerRow+1; i<Math.min(headerRow+5, rows.length); i++){
+  let tipoCol = 6;
+  for (let i = headerRow+1; i < Math.min(headerRow+5, rows.length); i++) {
     const r = rows[i]||[];
-    for(let ci=0; ci<r.length; ci++){
+    for (let ci = 0; ci < r.length; ci++) {
       const v = norm(r[ci]||'');
-      if(v==='planejado'||v==='realizado'){ tipoCol=ci; break; }
+      if (v==='planejado'||v==='realizado') { tipoCol=ci; break; }
     }
-    if(tipoCol!==6) break;
+    if (tipoCol!==6) break;
   }
 
   addImportLog(`🗺️ SAP:${sapCol} PN:${pnCol} Cliente:${clientCol} JAN:${janCol} Resp:${respCol} Result:${resultCol}`);
 
   const parsed = [];
-  let nextId = Math.max(0, ...audits.map(a=>a.id||0)) + 1;
+  // FIX 2: nextId usando reduce para ser seguro com lista vazia
+  let nextId = state.audits.reduce((max, a) => Math.max(max, a.id||0), 0) + 1;
   let skipped = 0;
   let i = headerRow + 1;
 
-  while(i < rows.length){
-    const row = rows[i]||[];
-    const sapRaw = String(row[sapCol]||'').trim();
-    const tipoRaw = norm(row[tipoCol]||'');
+  while (i < rows.length) {
+    const row      = rows[i]||[];
+    const sapRaw   = String(row[sapCol]||'').trim();
+    const tipoRaw  = norm(row[tipoCol]||'');
     const sapDigits = sapRaw.replace(/\D/g,'');
 
-    // Linha válida: SAP numérico 6+ dígitos, tipo Planejado ou vazio
-    if(sapDigits.length >= 6 && (tipoRaw===''||tipoRaw.includes('plan'))){
-      const planned = Array.from({length:12},(_,m)=>(row[janCol+m]!=null&&String(row[janCol+m]).trim()!=='')?1:0);
+    if (sapDigits.length >= 6 && (tipoRaw===''||tipoRaw.includes('plan'))) {
+      const planned  = Array.from({length:12}, (_,m) => (row[janCol+m]!=null&&String(row[janCol+m]).trim()!=='')?1:0);
       const realized = Array(12).fill(0);
 
-      // Próxima linha = Realizado?
-      if(i+1 < rows.length){
+      if (i+1 < rows.length) {
         const nr = rows[i+1]||[];
-        if(norm(nr[tipoCol]||'').includes('real')){
-          for(let m=0;m<12;m++) if(nr[janCol+m]!=null&&String(nr[janCol+m]).trim()!=='') realized[m]=1;
+        if (norm(nr[tipoCol]||'').includes('real')) {
+          for (let m=0; m<12; m++) if(nr[janCol+m]!=null&&String(nr[janCol+m]).trim()!=='') realized[m]=1;
           i++;
         }
       }
 
-      const months   = planned.map((p,m)=>realized[m]?2:p?1:0);
+      const months    = planned.map((p,m) => realized[m]?2:p?1:0);
       const resultado = String(row[resultCol]||'').trim().toUpperCase();
-      const status   = resultado==='OK'?'Aprovado':resultado==='NOK'?'Reprovado':'Pendente';
-      const riskFlag = String(row[riskCol]||'').trim();
-      const risk     = (riskFlag==='X'||riskFlag==='x')?'Alto':'Baixo';
-      const desc     = String(row[descCol]||'').replace(/\s+/g,' ').trim();
-      const pn       = String(row[pnCol]||'').trim();
+      const status    = resultado==='OK'?'Aprovado':resultado==='NOK'?'Reprovado':'Pendente';
+      const riskFlag  = String(row[riskCol]||'').trim();
+      const risk      = (riskFlag==='X'||riskFlag==='x')?'Alto':'Baixo';
+      const desc      = String(row[descCol]||'').replace(/\s+/g,' ').trim();
+      const pn        = String(row[pnCol]||'').trim();
 
-      if(desc||pn){
-        parsed.push({
-          id:nextId++, sap:sapRaw, pn,
-          client:String(row[clientCol]||'').trim(),
-          desc,
-          family:String(row[familyCol]||'').trim()||'Outros',
-          risk, months,
-          resp:String(row[respCol]||'').trim(),
-          status,
-          obs:String(row[obsCol]||'').trim(),
-          file:null
-        });
+      if (desc || pn) {
+        parsed.push({id:nextId++, sap:sapRaw, pn, client:String(row[clientCol]||'').trim(), desc, family:String(row[familyCol]||'').trim()||'Outros', risk, months, resp:String(row[respCol]||'').trim(), status, obs:String(row[obsCol]||'').trim(), file:null});
       } else skipped++;
     }
     i++;
   }
 
-  setImportProgress(90,'Calculando diferenças...');
-  if(skipped>0) addImportLog(`⚠️ ${skipped} linhas ignoradas`,'warn');
+  setImportProgress(90, 'Calculando diferenças...');
+  if (skipped > 0) addImportLog(`⚠️ ${skipped} linhas ignoradas`, 'warn');
   addImportLog(`📊 <b>${parsed.length}</b> auditorias encontradas`);
 
-  if(parsed.length===0){
+  if (parsed.length === 0) {
     addImportLog('❌ Nenhuma auditoria reconhecida. Verifique o arquivo.','err');
     setImportProgress(100,'Concluído com erros');
     return;
   }
 
-  const existingSaps = new Set(audits.map(a=>a.sap));
-  const newOnes  = parsed.filter(a=>!existingSaps.has(a.sap));
-  const updated  = parsed.filter(a=>existingSaps.has(a.sap));
+  const existingSaps = new Set(state.audits.map(a => a.sap));
+  const newOnes  = parsed.filter(a => !existingSaps.has(a.sap));
+  const updated  = parsed.filter(a => existingSaps.has(a.sap));
   addImportLog(`🆕 Novas: <b class="log-ok">${newOnes.length}</b> · Atualizações: <b style="color:var(--accent)">${updated.length}</b>`);
 
-  importedAudits = parsed;
+  state_importedAudits = parsed;
   document.getElementById('impTotal').textContent   = parsed.length;
   document.getElementById('impNew').textContent     = newOnes.length;
   document.getElementById('impUpdated').textContent = updated.length;
-  document.getElementById('importSummary').style.display='';
-  setImportProgress(100,'✅ Pronto para aplicar!');
+  document.getElementById('importSummary').style.display = '';
+  setImportProgress(100, '✅ Pronto para aplicar!');
 }
 
-function applyImport(mode){
-  if(!importedAudits.length) return;
-
-  if(mode === 'replace'){
-    audits = importedAudits;
-    notify(`✅ ${audits.length} auditorias importadas (substituição total)`);
+function applyImport(mode) {
+  if (!state_importedAudits.length) return;
+  if (mode === 'replace') {
+    state.audits = state_importedAudits;
+    notify(`✅ ${state.audits.length} auditorias importadas (substituição total)`);
   } else {
-    // Merge: update existing by SAP, add new ones
     const sapMap = {};
-    audits.forEach(a=>{ sapMap[a.sap] = a; });
-    let added = 0, updated = 0;
-    importedAudits.forEach(imp=>{
-      if(sapMap[imp.sap]){
-        // Update fields but keep file attachments
-        const existing = sapMap[imp.sap];
-        Object.assign(existing, {...imp, id:existing.id, file:existing.file});
-        updated++;
+    state.audits.forEach(a => { sapMap[a.sap] = a; });
+    let added = 0, upd = 0;
+    state_importedAudits.forEach(imp => {
+      if (sapMap[imp.sap]) {
+        Object.assign(sapMap[imp.sap], {...imp, id:sapMap[imp.sap].id, file:sapMap[imp.sap].file});
+        upd++;
       } else {
-        audits.push(imp);
+        state.audits.push(imp);
         added++;
       }
     });
-    notify(`✅ ${added} adicionadas · ${updated} atualizadas`);
+    notify(`✅ ${added} adicionadas · ${upd} atualizadas`);
   }
-
-  filtered = [...audits];
+  state.filtered = [...state.audits];
   saveAudits();
   updateFilterOptions();
   renderMetrics();
@@ -2520,57 +2010,60 @@ function applyImport(mode){
   closeImportModal();
 }
 
-function toggleExportMenu(){
+function toggleExportMenu() {
   const m = document.getElementById('exportMenu');
-  m.style.display = m.style.display==='none'?'block':'none';
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
 }
-function closeExportMenu(){ document.getElementById('exportMenu').style.display='none'; }
+function closeExportMenu() { document.getElementById('exportMenu').style.display = 'none'; }
 
-function exportToExcel(){
-  try{
+function exportToExcel() {
+  try {
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(audits.map(a=>({
+    const ws = XLSX.utils.json_to_sheet(state.audits.map(a => ({
       SAP:a.sap, PN:a.pn, Cliente:a.client, Descrição:a.desc, Família:a.family,
       Risco:a.risk, Responsável:a.resp, Status:a.status, Observações:a.obs||'',
-      ...Object.fromEntries(MONTHS.map((m,i)=>[m,STATUS_LABELS[a.months[i]]||'—']))
+      ...Object.fromEntries(MONTHS.map((m,i) => [m, STATUS_LABELS[a.months[i]]||'—']))
     })));
-    // Column widths
     ws['!cols'] = [{wch:14},{wch:12},{wch:12},{wch:24},{wch:14},{wch:10},{wch:16},{wch:12},{wch:30},...Array(12).fill({wch:12})];
-    XLSX.utils.book_append_sheet(wb,ws,'Auditorias 2026');
-    XLSX.writeFile(wb,`T1_Auditorias_${new Date().toISOString().slice(0,10)}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, 'Auditorias 2026');
+    XLSX.writeFile(wb, `T1_Auditorias_${new Date().toISOString().slice(0,10)}.xlsx`);
     notify('Excel exportado com sucesso!');
-  }catch(e){ notify('Erro ao exportar Excel','error'); }
+  } catch(e) { notify('Erro ao exportar Excel','error'); }
 }
-function exportToCSV(){
+
+function exportToCSV() {
   const headers = ['SAP','PN','Cliente','Descrição','Família','Risco','Responsável','Status','Observações',...MONTHS];
   let csv = headers.join(';')+'\n';
-  audits.forEach(a=>{
+  state.audits.forEach(a => {
     csv += [a.sap,a.pn,a.client,`"${a.desc}"`,a.family,a.risk,a.resp,a.status,`"${a.obs||''}"`,...a.months.map(v=>STATUS_LABELS[v]||'—')].join(';')+'\n';
   });
-  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href=url; link.download=`T1_Auditorias_${new Date().toISOString().slice(0,10)}.csv`; link.click();
+  link.href = url; link.download = `T1_Auditorias_${new Date().toISOString().slice(0,10)}.csv`; link.click();
   URL.revokeObjectURL(url);
   notify('CSV exportado com sucesso!');
 }
 
 // ======= UTILITÁRIOS =======
-function closeModal(id){ document.getElementById(id).classList.remove('active'); }
-function toggleTheme(){
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function toggleTheme() {
   document.body.classList.toggle('light');
   const isLight = document.body.classList.contains('light');
   try { localStorage.setItem('theme_t1', isLight?'light':'dark'); } catch(e) {}
-  document.getElementById('themeIcon').textContent = isLight?'☀️':'🌙';
-  setTimeout(()=>{ renderCharts(); if(document.getElementById('view-analytics').style.display!=='none') renderAnalytics(); },50);
+  document.getElementById('themeIcon').textContent = isLight ? '☀️' : '🌙';
+  setTimeout(() => {
+    renderCharts();
+    if (document.getElementById('view-analytics').style.display !== 'none') renderAnalytics();
+  }, 50);
 }
-function notify(msg,type='success'){
+function notify(msg, type='success') {
   const n = document.createElement('div');
-  n.className = 'notif '+(type==='error'?'error':type==='warn'?'warn':'');
-  const icons = {success:'✅',error:'⛔',warn:'⚠️'};
+  n.className = 'notif ' + (type==='error'?'error':type==='warn'?'warn':'');
+  const icons = {success:'✅', error:'⛔', warn:'⚠️'};
   n.innerHTML = `<span>${icons[type]||'✅'}</span><span>${msg}</span>`;
   document.body.appendChild(n);
-  setTimeout(()=>n.remove(),3200);
+  setTimeout(() => n.remove(), 3200);
 }
 
 init();
